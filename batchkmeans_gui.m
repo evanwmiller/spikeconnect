@@ -92,8 +92,6 @@ window = 50;
 K = 3;
 rearm_factor = 2;
 
-
-
 spikesDFFValues = [];
 dffSNRValues = [];
 for ff = 1:numel(stdFileNames)
@@ -132,12 +130,13 @@ for ff = 1:numel(stdFileNames)
     save([pathstr '\spikesData.mat'] , 'clusters' , ...
         'spikes_cluster_idx' , 'baseline_cluster_idx' , ...
         'rasterSpikeTimes' , 'dffs' , 'bkg_subtracted_traces' , ...
-        'ROI_traces' , 'diffFeatures' , 'snappath' , 'textPos' , 'ROI_masks');
+        'ROI_traces' , 'diffFeatures' , 'snappath' , 'textPos' , 'ROI_masks' , ...
+        'dff_snr');
    
 end
 
 meandff = nanmean(spikesDFFValues);
-thresh = meandff*4.7185 - 0.016;
+thresh = 5;
 set(handles.thresh_edit , 'String' , num2str(thresh));
 % figure;
 binranges = (-0.06 : 0.001 : 0.3);
@@ -228,9 +227,9 @@ disp('Updating spike times...')
 % wh = busydlg('Updating spike times... Please Wait...');
 for ff = 1:numel(stdFileNames)
     [pathstr,t1,t2] = fileparts(stdFileNames{ff}); 
-    load([pathstr '\spikesData.mat'] , 'rasterSpikeTimes' , 'dffs')
-    for dd = 1:numel(dffs)
-        tmp = dffs{dd};
+    load([pathstr '\spikesData.mat'] , 'rasterSpikeTimes' , 'dff_snr')
+    for dd = 1:numel(dff_snr)
+        tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
