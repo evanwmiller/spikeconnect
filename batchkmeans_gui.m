@@ -79,7 +79,7 @@ function folder_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global stdFileNames thresh lh dffdist rearm_factor;
+global stdFileNames thresh lh dffdist rearm_factor dffSNRdist;
 
 set(handles.radiobutton1 , 'Enable' , 'off');
 set(handles.radiobutton2 , 'Enable' , 'off');
@@ -138,32 +138,37 @@ end
 meandff = nanmean(spikesDFFValues);
 thresh = 5;
 set(handles.thresh_edit , 'String' , num2str(thresh));
-% figure;
+figure;
 binranges = (-0.06 : 0.001 : 0.3);
 % binranges = (-0.00 : 0.001 : 2);
 dffdist = histc(spikesDFFValues , binranges);
-set(handles.dff_axes , 'Visible' , 'on')
-axes(handles.dff_axes)
+
+
 bar(binranges , dffdist , 'histc');
 title(['$$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes'] , 'Interpreter' , 'latex')
-lh = line([thresh thresh] , [0 max(dffdist)] , 'Color' , 'r');
 infoStr = ['Average dF/F = ' num2str(meandff) char(10) 'Median dF/F = ' num2str(nanmedian(spikesDFFValues))] ;
 
 set(handles.dff_info_text , 'String' , infoStr);
 set(handles.continue_button , 'Visible' , 'on');
 
-
-figure;
+set(handles.dff_axes , 'Visible' , 'on')
+axes(handles.dff_axes);
 binranges = (-5 : 0.2 : 40);
 dffSNRdist = histc(dffSNRValues , binranges);
 bar(binranges , dffSNRdist , 'histc');
-title(num2str(sum(~isnan(dffSNRValues))));
-figure;
 
+title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes'] , 'Interpreter' , 'latex')
+lh = line([thresh thresh] , [0 max(dffSNRdist)] , 'Color' , 'r');
+% title(num2str(sum(~isnan(dffSNRValues))));
+
+
+figure;
 histfit(dffSNRValues , 225 , 'kernel')
+title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - kernel histfit'] , 'Interpreter' , 'latex')
+
 figure;
 histfit(dffSNRValues , 225 , 'normal')
-
+title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - normal histfit'] , 'Interpreter' , 'latex')
 
 
 plot_binned_snr(spikesDFFValues , dffSNRValues , -0.0 : 0.01 : 0.12);
@@ -206,10 +211,10 @@ function dff_edit_button_Callback(hObject, eventdata, handles)
 % hObject    handle to dff_edit_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global thresh lh dffdist;
+global thresh lh dffdist dffSNRdist;
 thresh = str2double(get(handles.thresh_edit , 'String'));
 delete(lh);
-lh = line([thresh thresh] , [0 max(dffdist)] , 'Color' , 'r');
+lh = line([thresh thresh] , [0 max(dffSNRdist)] , 'Color' , 'r');
 guidata(hObject, handles);
 
 

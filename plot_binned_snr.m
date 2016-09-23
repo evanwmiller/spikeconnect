@@ -5,7 +5,7 @@ dff_vector(isnan(dff_vector)) = [];
 snr_vector(isnan(snr_vector)) = [];
 spaxes = {}; 
 figure;
-   
+title('plot of SNR distributions of data binned by  their DFF')   
 maxIdx = 1;
 maxYlim = 0; 
 for ii = 1 : numel(binrange) - 1

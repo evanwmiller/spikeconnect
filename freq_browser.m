@@ -22,7 +22,7 @@ function varargout = freq_browser(varargin)
 
 % Edit the above text to modify the response to help freq_browser
 
-% Last Modified by GUIDE v2.5 22-Sep-2016 15:05:27
+% Last Modified by GUIDE v2.5 23-Sep-2016 14:43:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -193,4 +193,3 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%--non-gui functions--%%%%%%%%%%%%%%%%%%%
 
  
-
