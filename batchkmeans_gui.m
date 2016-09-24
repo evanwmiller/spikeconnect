@@ -233,13 +233,24 @@ disp('Updating spike times...')
 for ff = 1:numel(stdFileNames)
     [pathstr,t1,t2] = fileparts(stdFileNames{ff}); 
     load([pathstr '\spikesData.mat'] , 'rasterSpikeTimes' , 'dff_snr')
+    ifreqs = {};
+    freqs = {};
     for dd = 1:numel(dff_snr)
         tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
+        [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd});
     end
-    save([pathstr '\spikesData.mat'] ,  'rasterSpikeTimes' ,  '-append');
+     
+    save([pathstr '\spikesData.mat'] ,  'rasterSpikeTimes' ,   '-append');
+    
+    if exist([pathstr '\ifreqs.mat'], 'file')
+      save([pathstr '\ifreqs.mat'] , 'ifreqs' , 'freqs' , '-append')
+    else
+      save([pathstr '\ifreqs.mat'] , 'ifreqs' , 'freqs')
+    end
+    
 end
 disp('Spike times updated and saved')
 % delete(wh);
