@@ -230,17 +230,53 @@ global thresh stdFileNames rearm_factor;
 
 disp('Updating spike times...')
 % wh = busydlg('Updating spike times... Please Wait...');
+
+All_ROI_traces = {};
+All_RasterSpikeTimes = {};
+ROI_counts = 0;
+axhandles = createROIfigure;
 for ff = 1:numel(stdFileNames)
     [pathstr,t1,t2] = fileparts(stdFileNames{ff}); 
-    load([pathstr '\spikesData.mat'] , 'rasterSpikeTimes' , 'dff_snr')
+    load([pathstr '\spikesData.mat'] , 'rasterSpikeTimes' , 'dff_snr' , 'ROI_traces')
     ifreqs = {};
     freqs = {};
     for dd = 1:numel(dff_snr)
+        ROI_counts = ROI_counts + 1;
         tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
         [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd});
+        
+        
+        if mod(ROI_counts , 9) ~= 0
+            
+            axes(axhandles{mod(ROI_counts , 9)}('trace'))
+            plot(ROI_traces{dd})
+            traceLength = numel(ROI_traces{dd});
+            
+            axes(axhandles{mod(ROI_counts , 9)}('spikes'))
+            t = rasterSpikeTimes{dd};
+            for ll = 1:numel(t)
+                line([t(ll)  t(ll)] , [0.0  1.0] , 'Color' , 'k')
+            end
+            line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
+            line([1 1] , [0.0 1.0] , 'Color' , 'w');
+            title('Spike train')
+        else
+            axes(axhandles{9}('trace'));
+            plot(ROI_traces{dd})
+            
+            axes(axhandles{9}('spikes'));
+            t = rasterSpikeTimes{dd};
+            for ll = 1:numel(t)
+                line([t(ll)  t(ll)] , [0.0  1.0] , 'Color' , 'k')
+            end
+            line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
+            line([1 1] , [0.0 1.0] , 'Color' , 'w');
+            title('Spike train')
+            axhandles = createROIfigure;
+        end
     end
      
     save([pathstr '\spikesData.mat'] ,  'rasterSpikeTimes' ,   '-append');
