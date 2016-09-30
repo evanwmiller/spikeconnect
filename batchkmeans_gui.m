@@ -162,13 +162,13 @@ lh = line([thresh thresh] , [0 max(dffSNRdist)] , 'Color' , 'r');
 % title(num2str(sum(~isnan(dffSNRValues))));
 
 
-figure;
-histfit(dffSNRValues , 225 , 'kernel')
-title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - kernel histfit'] , 'Interpreter' , 'latex')
-
-figure;
-histfit(dffSNRValues , 225 , 'normal')
-title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - normal histfit'] , 'Interpreter' , 'latex')
+% figure;
+% histfit(dffSNRValues , 225 , 'kernel')
+% title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - kernel histfit'] , 'Interpreter' , 'latex')
+% 
+% figure;
+% histfit(dffSNRValues , 225 , 'normal')
+% title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - normal histfit'] , 'Interpreter' , 'latex')
 
 
 plot_binned_snr(spikesDFFValues , dffSNRValues , -0.0 : 0.01 : 0.12);
