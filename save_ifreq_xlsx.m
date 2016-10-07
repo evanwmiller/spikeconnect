@@ -1,8 +1,10 @@
-function save_ifreq_xlsx(ifreqs , freqs , xlsxFileName)
+function save_ifreq_xlsx(ifreqs , freqs , xlsxFileName ,sheetn ,sourceFileName)
 % ifreqs: a cell array containing a set of ROIs' instantaneous frequencies
 % freqs: a cell array containgin a set of ROIs' frequencies
 % xlsxFileName: Excel filename to which data is saved (format should be
 % [filename].xlsx)
+% sheetn: a character vector containing the worksheet name or a positive 
+% integer indicating the worksheet index
 % Note: ifreqs and freqs should have similar sizes
 % Author: Kaveh Karbasi
 
@@ -18,12 +20,16 @@ for ff = 1:numel(ifreqs)
 end
 outMat(outMat == 0) = nan;
 
-writetable(table({'Inst. Freqs'}) ,xlsxFileName, 'Range' , 'A1' , 'WriteVariableNames' , false);
+writetable(table({sourceFileName}) ,xlsxFileName ,'Sheet', sheetn, 'Range' , 'A1' , 'WriteVariableNames' , false);
 
-writetable(table(colTitles) ,xlsxFileName, 'Range' , 'A2' , 'WriteVariableNames' , false);
+writetable(table({'Freqs'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['A' num2str(maxFreq + 6)] , 'WriteVariableNames' , false);
 
-writetable(table(outMat) , xlsxFileName , 'Range' , 'A3' , 'WriteVariableNames' , false);
+writetable(table(cell2mat(freqs)') ,xlsxFileName,'Sheet', sheetn, 'Range' , ['B' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
 
-writetable(table({'Freqs'}) ,xlsxFileName, 'Range' , ['A' num2str(maxFreq + 5)] , 'WriteVariableNames' , false);
+writetable(table({'Inst. Freqs'}) ,xlsxFileName ,'Sheet', sheetn, 'Range' , 'A3' , 'WriteVariableNames' , false);
 
-writetable(table(cell2mat(freqs)') ,xlsxFileName, 'Range' , ['B' num2str(maxFreq + 6)] , 'WriteVariableNames' , false);
+writetable(table(colTitles) ,xlsxFileName, 'Sheet', sheetn, 'Range' , 'A4' , 'WriteVariableNames' , false);
+
+writetable(table(outMat) , xlsxFileName ,'Sheet', sheetn,  'Range' , 'A5' , 'WriteVariableNames' , false);
+
+
