@@ -86,6 +86,9 @@ global stdFileNames thresh rearm_factor;
 ROI_counts = 0;
 axhandles = createROIfigure;
 for ff = 1:numel(stdFileNames)
+    file_path = strsplit(stdFileNames{ff},{'/','\\'});
+    area_label = file_path{end-1};
+    roi_label = 1;
     load(stdFileNames{ff} , 'rasterSpikeTimes' , 'ROI_traces' , 'dff_snr' )
     for dd = 1:numel(rasterSpikeTimes)
         ROI_counts = ROI_counts + 1;
@@ -108,7 +111,9 @@ for ff = 1:numel(stdFileNames)
             end
             line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
             line([1 1] , [0.0 1.0] , 'Color' , 'w');
-            title('Spike train')
+            title([area_label ' ROI ' int2str(roi_label)]);
+            roi_label = roi_label + 1;
+            
         else
             axes(axhandles{9}('trace'));
             plot(ROI_traces{dd})
@@ -120,7 +125,8 @@ for ff = 1:numel(stdFileNames)
             end
             line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
             line([1 1] , [0.0 1.0] , 'Color' , 'w');
-            title('Spike train')
+            title([area_label ' ROI ' int2str(roi_label)]);
+            roi_label = roi_label + 1;
             axhandles = createROIfigure;
         end
     end    
