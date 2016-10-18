@@ -171,7 +171,7 @@ lh = line([thresh thresh] , [0 max(dffSNRdist)] , 'Color' , 'r');
 % title(['SNR of $$\frac{\Delta F}{F}$$ distribution with baseline cluster median as F - ' num2str(sum(~isnan(spikesDFFValues))) ' spikes - normal histfit'] , 'Interpreter' , 'latex')
 
 
-plot_binned_snr(spikesDFFValues , dffSNRValues , -0.0 : 0.01 : 0.12);
+% plot_binned_snr(spikesDFFValues , dffSNRValues , -0.0 : 0.01 : 0.12);
 
 guidata(hObject, handles);
 
