@@ -79,12 +79,12 @@ function export_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-xlsxFilename = uiputfile({'*.xlxs' ; '*.xls'} , 'Save as' , 'export.xlsx');
+[xlsxFilename, xlsxPath] = uiputfile({'*.xlsx' ; '*.xls'} , 'Save as' , 'export.xlsx');
 exportFiles = cellstr(get(handles.destination_listbox,'String'));
 for ff = 1:numel(exportFiles)
     load(exportFiles{ff} , 'freqs' , 'ifreqs');
-    save_ifreq_xlsx(ifreqs , freqs , xlsxFilename , ff , exportFiles{ff});
-    disp(['Saving data to ' xlsxFilename ' ... '])
+    save_ifreq_xlsx(ifreqs , freqs , [xlsxPath xlsxFilename] , ff , exportFiles{ff});
+    disp(['Saving data to ' xlsxPath xlsxFilename ' ... '])
 end
 
 
@@ -147,19 +147,33 @@ function add_button_Callback(hObject, eventdata, handles)
 % hObject    handle to add_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global src_selected_str src_selected_idx;
-
-prev_list = get(handles.destination_listbox,'String');
-
-if isempty(prev_list)
-    set(handles.destination_listbox,'String',src_selected_str)
-else
+global src_selected_str src_selected_idx dest_selected_str dest_selected_idx;
+pause(0.02)
+contents = cellstr(get(handles.source_listbox,'String'));
+if ~isempty(contents)
     
-    new_list = [prev_list; src_selected_str];
-    set(handles.destination_listbox,'String',new_list)
-end
+    prev_list = get(handles.destination_listbox,'String');
 
-delete_item_from_listbox(handles.source_listbox , src_selected_idx);
+    if isempty(prev_list)
+        set(handles.destination_listbox,'String',src_selected_str)
+    else
+
+        new_list = [prev_list; src_selected_str];
+        set(handles.destination_listbox,'String',new_list)
+        contents = cellstr(get(handles.destination_listbox,'String'));
+        if ~isempty(contents)
+            dest_selected_idx = 1;
+            dest_selected_str = contents(dest_selected_idx);
+        end
+    end
+
+    delete_item_from_listbox(handles.source_listbox , src_selected_idx);
+    contents = cellstr(get(handles.source_listbox,'String'));
+    if ~isempty(contents)
+        src_selected_idx = 1;
+        src_selected_str = contents(src_selected_idx);
+    end
+end
 guidata(hObject, handles);
 
 
@@ -168,19 +182,33 @@ function remove_button_Callback(hObject, eventdata, handles)
 % hObject    handle to remove_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global dest_selected_str dest_selected_idx;
+global src_selected_str src_selected_idx dest_selected_str dest_selected_idx;
+pause(0.02);
+contents = cellstr(get(handles.destination_listbox,'String'));
+if ~isempty(contents)
+    prev_list = get(handles.source_listbox,'String');
 
-prev_list = get(handles.source_listbox,'String');
+    if isempty(prev_list)
+        set(handles.source_listbox,'String',dest_selected_str)
+    else
 
-if isempty(prev_list)
-    set(handles.source_listbox,'String',dest_selected_str)
-else
-    
-    new_list = [prev_list; dest_selected_str];
-    set(handles.source_listbox,'String',new_list)
+        new_list = [prev_list; dest_selected_str];
+        set(handles.source_listbox,'String',new_list)
+        contents = cellstr(get(handles.source_listbox,'String'));
+        if ~isempty(contents)
+           src_selected_idx = 1;
+           src_selected_str = contents(src_selected_idx);
+        end
+    end
+
+    delete_item_from_listbox(handles.destination_listbox , dest_selected_idx);
+    contents = cellstr(get(handles.destination_listbox,'String'));
+
+    if ~isempty(contents)
+        dest_selected_idx = 1;
+        dest_selected_str = contents(dest_selected_idx);
+    end
 end
-
-delete_item_from_listbox(handles.destination_listbox , dest_selected_idx);
 guidata(hObject, handles);
 
 % --- Executes on button press in select_files_button.
@@ -189,7 +217,7 @@ function select_files_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global stdFileNames;
+global stdFileNames src_selected_str src_selected_idx;
 
 selected_radio = get(handles.folder_selection_radiogroup , 'SelectedObject');
 selected_string = get(selected_radio , 'String');
@@ -198,10 +226,24 @@ if strcmp(selected_string , 'Recursive')
     stdFileNames = recursdir(baseDir , '^ifreqs.mat$');
    
 elseif strcmp(selected_string , 'Multi-select')
-    stdFileNames = uipickfiles('REFilter' ,'^ifreqs.mat$') ;
+    
+    filesnfolders = uipickfiles('REFilter' ,'^ifreqs.mat$') ;
+    stdFileNames={};
+    for fnf = 1:numel(filesnfolders)
+        if isdir(filesnfolders{fnf})
+            stdFileNames = [stdFileNames recursdir(filesnfolders{fnf} , '^ifreqs.mat$')];
+        else
+            stdFileNames = [stdFileNames filesnfolders{fnf}];
+        end
+    end
 else
     error(['Radio button reading error due to ambiguous radio button string value:' selected_string])
 end
 
 set(handles.source_listbox , 'String' ,  stdFileNames)
+contents = cellstr(get(handles.source_listbox,'String'));
+if ~isempty(contents)
+    src_selected_idx = 1;
+    src_selected_str = contents(src_selected_idx);
+end
 guidata(hObject, handles);
