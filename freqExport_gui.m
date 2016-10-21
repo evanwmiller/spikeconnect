@@ -83,15 +83,23 @@ function export_button_Callback(hObject, eventdata, handles)
 
 exportFiles = cellstr(get(handles.destination_listbox,'String'));
 iFreqs_all_files = [];
+freqs_all_files = [];
 for ff = 1:numel(exportFiles)
     load(exportFiles{ff} , 'freqs' , 'ifreqs');
     ifreqs_all = save_ifreq_xlsx(ifreqs , freqs , [xlsxPath xlsxFilename] , ff , exportFiles{ff});
     iFreqs_all_files = [iFreqs_all_files; ifreqs_all];
+    freqs_all_files = [freqs_all_files; cell2mat(freqs)'];
     disp(['Saving data to ' xlsxPath xlsxFilename ' ... '])
 end
-writetable(table(iFreqs_all_files) , [xlsxPath xlsxFilename] ,'Sheet', ff+1,  'Range' , 'A2' , 'WriteVariableNames' , false);
-writetable(table({'Inst. Freqs (All Files)'}) ,[xlsxPath xlsxFilename] ,'Sheet', ff+1, 'Range' , 'A1' , 'WriteVariableNames' , false);
+writetable(table(iFreqs_all_files) , [xlsxPath xlsxFilename] ,'Sheet',...
+    ff+1,  'Range' , 'A2' , 'WriteVariableNames' , false);
+writetable(table({'Inst. Freqs (All Files)'}) ,[xlsxPath xlsxFilename] ,...
+    'Sheet', ff+1, 'Range' , 'A1' , 'WriteVariableNames' , false);
 
+writetable(table(freqs_all_files) , [xlsxPath xlsxFilename] ,'Sheet',...
+    ff+1,  'Range' , 'C2' , 'WriteVariableNames' , false);
+writetable(table({'Frequencies (All Files)'}) ,[xlsxPath xlsxFilename] ,...
+    'Sheet', ff+1, 'Range' , 'C1' , 'WriteVariableNames' , false);
 
 
 
