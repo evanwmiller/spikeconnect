@@ -22,7 +22,7 @@ function varargout = thresholding_gui(varargin)
 
 % Edit the above text to modify the response to help thresholding_gui
 
-% Last Modified by GUIDE v2.5 30-Sep-2016 14:56:00
+% Last Modified by GUIDE v2.5 21-Oct-2016 16:02:23
 
 % Begin initialization code - DO NOT EDIT
 global rearm_factor;
@@ -83,6 +83,13 @@ function preview_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global stdFileNames thresh rearm_factor;
 
+
+contents = cellstr(get(handles.rearm_popup,'String'));
+selected_idx = get(handles.rearm_popup,'Value');
+selected_str = contents{selected_idx};
+
+
+rearm_factor = str2num(selected_str);
 ROI_counts = 0;
 axhandles = createROIfigure;
 for ff = 1:numel(stdFileNames)
@@ -132,6 +139,7 @@ for ff = 1:numel(stdFileNames)
     end    
 
 end
+guidata(hObject, handles);
 
 % --- Executes on button press in save_button.
 function save_button_Callback(hObject, eventdata, handles)
@@ -266,3 +274,26 @@ title('SNR of $$\frac{\Delta F}{F}$$ distribution'  , 'Interpreter' , 'latex')
 lh = line([thresh thresh] , [0 max(dffSNRdist)] , 'Color' , 'r');
 set(handles.thresh_box , 'String' , num2str(thresh));
 guidata(hObject, handles);
+
+
+% --- Executes on selection change in rearm_popup.
+function rearm_popup_Callback(hObject, eventdata, handles)
+% hObject    handle to rearm_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns rearm_popup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from rearm_popup
+
+
+% --- Executes during object creation, after setting all properties.
+function rearm_popup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rearm_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
