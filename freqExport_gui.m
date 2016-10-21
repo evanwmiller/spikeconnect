@@ -80,12 +80,18 @@ function export_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 [xlsxFilename, xlsxPath] = uiputfile({'*.xlsx' ; '*.xls'} , 'Save as' , 'export.xlsx');
+
 exportFiles = cellstr(get(handles.destination_listbox,'String'));
+iFreqs_all_files = [];
 for ff = 1:numel(exportFiles)
     load(exportFiles{ff} , 'freqs' , 'ifreqs');
-    save_ifreq_xlsx(ifreqs , freqs , [xlsxPath xlsxFilename] , ff , exportFiles{ff});
+    ifreqs_all = save_ifreq_xlsx(ifreqs , freqs , [xlsxPath xlsxFilename] , ff , exportFiles{ff});
+    iFreqs_all_files = [iFreqs_all_files; ifreqs_all];
     disp(['Saving data to ' xlsxPath xlsxFilename ' ... '])
 end
+writetable(table(iFreqs_all_files) , [xlsxPath xlsxFilename] ,'Sheet', ff+1,  'Range' , 'A2' , 'WriteVariableNames' , false);
+writetable(table({'Inst. Freqs (All Files)'}) ,[xlsxPath xlsxFilename] ,'Sheet', ff+1, 'Range' , 'A1' , 'WriteVariableNames' , false);
+
 
 
 
