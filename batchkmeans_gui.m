@@ -120,7 +120,7 @@ for ff = 1:numel(stdFileNames)
 
         diffFeatures{bb} = sliding_window_flattener(bkg_subtracted_traces{bb} , window);
         [clusters{bb} , spikes_cluster_idx{bb} , baseline_cluster_idx{bb} , rasterSpikeTimes{bb} , dffs{bb} , dff_snr{bb}] = ...
-                               kmeans_sd_with_dff_thresh2(diffFeatures{bb} ,bkg_subtracted_traces{bb} , K , -10.0);
+                               kmeans_sd_with_dff_thresh3(diffFeatures{bb} ,bkg_subtracted_traces{bb} , K , -10.0);
         rasterSpikeTimes{bb} = burstAggregator(rasterSpikeTimes{bb} , rearm_factor);
         spikesDFFValues = [spikesDFFValues dffs{bb}];
         dffSNRValues = [dffSNRValues dff_snr{bb}];
