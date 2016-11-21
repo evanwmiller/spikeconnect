@@ -256,7 +256,7 @@ for rr = 1:numel(ROI_handles)
     textPos{rr} = get(text_handles{rr} , 'position');
 end
 
-[file,path,FilterIndex] = uiputfile(fullfile(SnapPathName, 'std.mat'),'Save data');
+[file,path,FilterIndex] = uiputfile(fullfile(SnapPathName,'std.mat'),'Save data');
 if file == 0
     return
 end

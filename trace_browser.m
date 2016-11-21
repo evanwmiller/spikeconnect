@@ -138,7 +138,7 @@ global ROI_traces_of dffs_of diffFeatures_of traceLength snapimg_of textPos_of R
 baseDir = uigetdir('' , 'Select a folder');
 set(handles.folder_text , 'String' , baseDir)
 set(handles.uipanel1 , 'Visible' , 'on')
-stdFileNames = recursdir(baseDir , '^spikesData.mat$');
+stdFileNames = recursdir(baseDir , '^spikesData.*.mat$');
 if isempty(stdFileNames)
     errordlg('No files found');
 else
