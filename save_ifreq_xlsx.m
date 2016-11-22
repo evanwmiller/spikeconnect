@@ -18,7 +18,9 @@ for ff = 1:numel(ifreqs)
        freqCol = ifreqs{ff};    
        freqCol = freqCol';
        alliFreqs = [alliFreqs ; freqCol];
-       outMat((1:numel(freqCol)) , ff) = freqCol;
+       if numel(freqCol)>0
+        outMat((1:numel(freqCol)) , ff) = freqCol;
+       end
 end
 outMat(outMat == 0) = nan;
 
