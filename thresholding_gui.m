@@ -230,11 +230,11 @@ selected_string = get(selected_radio , 'String');
 if strcmp(selected_string , 'Recursive')
     disp('rec')
     baseDir = uigetdir('' , 'Select a folder');
-    stdFileNames = recursdir(baseDir , '^spikesData.mat$');
+    stdFileNames = recursdir(baseDir , '^spikesData.*.mat$');
    
 elseif strcmp(selected_string , 'Multi-select')
     disp('ms')
-    stdFileNames = uipickfiles('REFilter' ,'^spikesData.mat$') ;
+    stdFileNames = uipickfiles('REFilter' ,'^spikesData.*.mat$') ;
 else
     error(['Radio button reading error due to ambiguous radio button string value:' selected_string])
 end
