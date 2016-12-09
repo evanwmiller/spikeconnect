@@ -95,6 +95,13 @@ axhandles = createROIfigure;
 for ff = 1:numel(stdFileNames)
     file_path = strsplit(stdFileNames{ff},{'/','\\'});
     area_label = file_path{end-1};
+    spikeDataNote = file_path{end};
+    hyphen_index = strfind(spikeDataNote,'-');
+    movie_label = '';
+    if ~isempty(hyphen_index)
+        period_index = strfind(spikeDataNote,'.');
+        movie_label = spikeDataNote(hyphen_index(1):period_index(1)-1);
+    end 
     roi_label = 1;
     load(stdFileNames{ff} , 'rasterSpikeTimes' , 'ROI_traces' , 'dff_snr' )
     for dd = 1:numel(rasterSpikeTimes)
@@ -118,7 +125,7 @@ for ff = 1:numel(stdFileNames)
             end
             line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
             line([1 1] , [0.0 1.0] , 'Color' , 'w');
-            title([area_label ' ROI ' int2str(roi_label)]);
+            title([area_label movie_label ' ROI ' int2str(roi_label)]);
             roi_label = roi_label + 1;
             
         else
@@ -132,7 +139,7 @@ for ff = 1:numel(stdFileNames)
             end
             line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
             line([1 1] , [0.0 1.0] , 'Color' , 'w');
-            title([area_label ' ROI ' int2str(roi_label)]);
+            title([area_label movie_label ' ROI ' int2str(roi_label)]);
             roi_label = roi_label + 1;
             axhandles = createROIfigure;
         end
@@ -152,27 +159,34 @@ for ff = 1:numel(stdFileNames)
     load(stdFileNames{ff} , 'rasterSpikeTimes' , 'dff_snr' , 'ROI_traces')
     ifreqs = {};
     freqs = {};
+    file_path = strsplit(stdFileNames{ff},{'/','\\'});
+    spikeDataNote = file_path{end};
+    hyphen_index = strfind(spikeDataNote,'-');
+    ifreq_note = '';
+    if ~isempty(hyphen_index)
+        period_index = strfind(spikeDataNote,'.');
+        ifreq_note = spikeDataNote(hyphen_index(1):period_index(1)-1);
+    end
+    
     for dd = 1:numel(dff_snr)
         tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
-        [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd});
-        
-        
+        [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd}); 
+        freqs{dd} = freqs{dd}/10;
     end
-    
     if exist(stdFileNames{ff}, 'file')
     save(stdFileNames{ff} ,  'rasterSpikeTimes' ,   '-append');
     else
         error('No spikesData.mat file exists')
     end
-    
     [pathstr,t1,t2] = fileparts(stdFileNames{ff}); 
-    if exist([pathstr '\ifreqs.mat'], 'file')
-      save([pathstr '\ifreqs.mat'] , 'ifreqs' , 'freqs' , '-append')
+    filename = ['ifreqs' ifreq_note '.mat'];
+    if exist([pathstr filesep filename], 'file')
+      save([pathstr filesep filename] , 'ifreqs' , 'freqs' , '-append')
     else
-      save([pathstr '\ifreqs.mat'] , 'ifreqs' , 'freqs')
+      save([pathstr filesep filename], 'ifreqs' , 'freqs')
     end
     
 end
@@ -230,7 +244,7 @@ selected_string = get(selected_radio , 'String');
 if strcmp(selected_string , 'Recursive')
     disp('rec')
     baseDir = uigetdir('' , 'Select a folder');
-    stdFileNames = recursdir(baseDir , '^spikesData.*.mat$');
+    stdFileNames = recursdir(baseDir , '^spikesData.*.mat$')
    
 elseif strcmp(selected_string , 'Multi-select')
     disp('ms')

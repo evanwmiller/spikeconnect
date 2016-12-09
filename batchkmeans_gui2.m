@@ -130,10 +130,10 @@ for ff = 1:numel(stdFileNames)
         end
         
         note = '';
-        if strcmp(stdname(4),'-') == 1
+        if length(stdname) >= 4 && strcmp(stdname(4),'-') == 1
             note = [note stdname(4:end)];
         end
-        if isstrprop(curr_file_name(end-5),'digit')
+        if length(curr_file_name) >= 6 && isstrprop(curr_file_name(end-5),'digit')
             note = [note '-' curr_file_name(end-5)];
         end
         [pathstr,t1,t2] = fileparts(stdFileNames{ff});

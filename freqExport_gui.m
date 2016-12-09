@@ -237,15 +237,15 @@ selected_radio = get(handles.folder_selection_radiogroup , 'SelectedObject');
 selected_string = get(selected_radio , 'String');
 if strcmp(selected_string , 'Recursive')
     baseDir = uigetdir('' , 'Select a folder');
-    stdFileNames = recursdir(baseDir , '^ifreqs.mat$');
+    stdFileNames = recursdir(baseDir , '^ifreqs.*.mat$');
    
 elseif strcmp(selected_string , 'Multi-select')
     
-    filesnfolders = uipickfiles('REFilter' ,'^ifreqs.mat$') ;
+    filesnfolders = uipickfiles('REFilter' ,'^ifreqs.*.mat$') ;
     stdFileNames={};
     for fnf = 1:numel(filesnfolders)
         if isdir(filesnfolders{fnf})
-            stdFileNames = [stdFileNames recursdir(filesnfolders{fnf} , '^ifreqs.mat$')];
+            stdFileNames = [stdFileNames recursdir(filesnfolders{fnf} , '^ifreqs.*.mat$')];
         else
             stdFileNames = [stdFileNames filesnfolders{fnf}];
         end
