@@ -28,16 +28,22 @@ writetable(table({sourceFileName}) ,xlsxFileName ,'Sheet', sheetn, 'Range' , 'A1
 
 writetable(table({'Freqs'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['A' num2str(maxFreq + 6)] , 'WriteVariableNames' , false);
 
-writetable(table(cell2mat(freqs)') ,xlsxFileName,'Sheet', sheetn, 'Range' , ['B' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
+if ~isempty(cell2mat(freqs))
+    writetable(table(cell2mat(freqs)') ,xlsxFileName,'Sheet', sheetn, 'Range' , ['B' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
+end
 
 writetable(table({'Inst. Freqs (all ROIs)'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['E' num2str(maxFreq + 6)] , 'WriteVariableNames' , false);
 
-writetable(table(alliFreqs) ,xlsxFileName,'Sheet', sheetn, 'Range' , ['E' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
+if ~isempty(alliFreqs)
+    writetable(table(alliFreqs) ,xlsxFileName,'Sheet', sheetn, 'Range' , ['E' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
+end
 
 writetable(table({'Inst. Freqs'}) ,xlsxFileName ,'Sheet', sheetn, 'Range' , 'A3' , 'WriteVariableNames' , false);
 
-writetable(table(colTitles) ,xlsxFileName, 'Sheet', sheetn, 'Range' , 'A4' , 'WriteVariableNames' , false);
-
-writetable(table(outMat) , xlsxFileName ,'Sheet', sheetn,  'Range' , 'A5' , 'WriteVariableNames' , false);
-
+if ~isempty(colTitles)
+    writetable(table(colTitles) ,xlsxFileName, 'Sheet', sheetn, 'Range' , 'A4' , 'WriteVariableNames' , false);
+end
+if ~isempty(outMat)
+    writetable(table(outMat) , xlsxFileName ,'Sheet', sheetn,  'Range' , 'A5' , 'WriteVariableNames' , false);
+end
 
