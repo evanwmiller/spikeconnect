@@ -155,6 +155,13 @@ function save_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global stdFileNames thresh rearm_factor;
 
+contents = cellstr(get(handles.rearm_popup,'String'));
+selected_idx = get(handles.rearm_popup,'Value');
+selected_str = contents{selected_idx};
+
+
+rearm_factor = str2num(selected_str);
+
 for ff = 1:numel(stdFileNames)
     load(stdFileNames{ff} , 'rasterSpikeTimes' , 'dff_snr' , 'ROI_traces')
     ifreqs = {};
@@ -172,6 +179,7 @@ for ff = 1:numel(stdFileNames)
         tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
+        rearm_factor
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
         [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd}); 
         freqs{dd} = freqs{dd}/10;
