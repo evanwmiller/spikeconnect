@@ -179,7 +179,7 @@ for ff = 1:numel(stdFileNames)
         tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
-        rearm_factor
+       
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
         [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd}); 
         freqs{dd} = freqs{dd}/10;
