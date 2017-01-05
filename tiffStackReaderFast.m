@@ -1,5 +1,5 @@
 function tiffStack = tiffStackReaderFast(filename)
-
+    warning('off', 'all');
     fileInfo=imfinfo(filename);
     frameW=fileInfo(1).Width;
     frameH=fileInfo(1).Height;
@@ -16,4 +16,7 @@ function tiffStack = tiffStackReaderFast(filename)
         end
     end
     close(h);
+ 
+    warning('on' , 'all');
+    
 end
