@@ -10,13 +10,13 @@ bkgSubtracted_traces = cell(size(ROI_masks));
 ROI_traces = cell(size(ROI_masks));
 bkg_trace = applyMask2TiffStack(tiffStack , Bkg_mask);
 bkg_trace = nnzMeanTrace(bkg_trace , Bkg_mask);
-bkg_median = median(bkg_trace);
+bkg_median = nanmedian(bkg_trace);
 
 
 for rr = 1:numel(ROI_masks)
 
     ROI_trace = applyMask2TiffStack(tiffStack , ROI_masks{rr});
-    ROI_trace = nnzMeanTrace(ROI_trace , Bkg_mask);
+    ROI_trace = nnzMeanTrace(ROI_trace , ROI_masks{rr});
     ROI_traces{rr} = ROI_trace;
     
     if  strcmp(bkg_decision , 'Raw')
