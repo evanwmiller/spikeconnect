@@ -85,64 +85,78 @@ set(handles.radiobutton1 , 'Enable' , 'off');
 set(handles.radiobutton2 , 'Enable' , 'off');
 set(handles.radiobutton3 , 'Enable' , 'off');
 
-baseDir = uigetdir('' , 'Select a folder');
-set(handles.folder_text , 'String' , baseDir)
-stdFileNames = recursdir(baseDir , '^std.*\.mat$');
-window = 50;
-K = 3;
-rearm_factor = 2;
 
-spikesDFFValues = [];
-dffSNRValues = [];
-for ff = 1:numel(stdFileNames)
-    
-    load(stdFileNames{ff});
-    [stdpath,stdname,stdext] = fileparts(stdFileNames{ff});
-    for curr_file_index = 2:numel(stackpath)
-        curr_file_name = stackpath{curr_file_index};
-        curr_file_path = [stackpath{1} curr_file_name];
-        warning('off' , 'all');
-        tiffStack = tiffStackReaderFast(curr_file_path);
-        warning('on' , 'all');
-    
-        selected_radio = get(handles.bkg_radiob , 'SelectedObject');
-        selected_string = get(selected_radio , 'String');
+try
+    baseDir = uigetdir('' , 'Select a folder');
+    set(handles.folder_text , 'String' , baseDir)
+    stdFileNames = recursdir(baseDir , '^std.*\.mat$');
+    window = 50;
+    K = 3;
+    rearm_factor = 2;
 
-        [bkg_subtracted_traces , ROI_traces] = getBkgSubtractedTraces(tiffStack , ROI_masks , bkg_cell_stack{curr_file_index-1},selected_string);
-
-        sizeTraces = size(bkg_subtracted_traces);
-        diffFeatures = cell(sizeTraces);
-        clusters = cell(sizeTraces);
-        spikes_cluster_idx = cell(sizeTraces);
-        baseline_cluster_idx = cell(sizeTraces);
-        rasterSpikeTimes = cell(sizeTraces);
-        dffs = cell(sizeTraces);
-        dff_snr = cell(sizeTraces);
-
-        for bb = 1:numel(bkg_subtracted_traces)
-
-            diffFeatures{bb} = sliding_window_flattener(bkg_subtracted_traces{bb} , window);
-            [clusters{bb} , spikes_cluster_idx{bb} , baseline_cluster_idx{bb} , rasterSpikeTimes{bb} , dffs{bb} , dff_snr{bb}] = ...
-                                   kmeans_sd_with_dff_thresh3(diffFeatures{bb} ,bkg_subtracted_traces{bb} , K , -10.0);
-            rasterSpikeTimes{bb} = burstAggregator(rasterSpikeTimes{bb} , rearm_factor);
-            spikesDFFValues = [spikesDFFValues dffs{bb}];
-            dffSNRValues = [dffSNRValues dff_snr{bb}];
-        end
+    spikesDFFValues = [];
+    dffSNRValues = [];
+    set(handles.info_txt , 'String' , 'Processing...');
+    for ff = 1:numel(stdFileNames)
         
-        note = '';
-        if length(stdname) >= 4 && strcmp(stdname(4),'-') == 1
-            note = [note stdname(4:end)];
+        load(stdFileNames{ff});
+        [stdpath,stdname,stdext] = fileparts(stdFileNames{ff});
+        for curr_file_index = 2:numel(stackpath)
+            
+            curr_file_name = stackpath{curr_file_index};
+            curr_file_path = [stackpath{1} curr_file_name];
+            warning('off' , 'all');
+            tiffStack = tiffStackReaderFast(curr_file_path);
+            warning('on' , 'all');
+
+            selected_radio = get(handles.bkg_radiob , 'SelectedObject');
+            selected_string = get(selected_radio , 'String');
+
+            [bkg_subtracted_traces , ROI_traces] = getBkgSubtractedTraces(tiffStack , ROI_masks , bkg_cell_stack{curr_file_index-1},selected_string);
+
+            sizeTraces = size(bkg_subtracted_traces);
+            diffFeatures = cell(sizeTraces);
+            clusters = cell(sizeTraces);
+            spikes_cluster_idx = cell(sizeTraces);
+            baseline_cluster_idx = cell(sizeTraces);
+            rasterSpikeTimes = cell(sizeTraces);
+            dffs = cell(sizeTraces);
+            dff_snr = cell(sizeTraces);
+
+            for bb = 1:numel(bkg_subtracted_traces)
+
+                diffFeatures{bb} = sliding_window_flattener(bkg_subtracted_traces{bb} , window);
+                [clusters{bb} , spikes_cluster_idx{bb} , baseline_cluster_idx{bb} , rasterSpikeTimes{bb} , dffs{bb} , dff_snr{bb}] = ...
+                                       kmeans_sd_with_dff_thresh3(diffFeatures{bb} ,bkg_subtracted_traces{bb} , K , -10.0);
+                rasterSpikeTimes{bb} = burstAggregator(rasterSpikeTimes{bb} , rearm_factor);
+                spikesDFFValues = [spikesDFFValues dffs{bb}];
+                dffSNRValues = [dffSNRValues dff_snr{bb}];
+            end
+
+            note = '';
+            if length(stdname) >= 4 && strcmp(stdname(4),'-') == 1
+                note = [note stdname(4:end)];
+            end
+            if length(curr_file_name) >= 6 && isstrprop(curr_file_name(end-5),'digit')
+                note = [note '-' curr_file_name(end-5)];
+            end
+            [pathstr,t1,t2] = fileparts(stdFileNames{ff});
+            disp(['Saving data to ' pathstr '/spikesData' note '.mat'])
+            
+            save([pathstr '/spikesData' note '.mat'] , 'clusters' , ...
+                'spikes_cluster_idx' , 'baseline_cluster_idx' , ...
+                'rasterSpikeTimes' , 'dffs' , 'bkg_subtracted_traces' , ...
+                'ROI_traces' , 'diffFeatures' , 'snappath' , 'textPos' , 'ROI_masks' , ...
+                'dff_snr');
         end
-        if length(curr_file_name) >= 6 && isstrprop(curr_file_name(end-5),'digit')
-            note = [note '-' curr_file_name(end-5)];
-        end
-        [pathstr,t1,t2] = fileparts(stdFileNames{ff});
-        disp(['Saving data to ' pathstr '/spikesData' note '.mat'])
-        save([pathstr '/spikesData' note '.mat'] , 'clusters' , ...
-            'spikes_cluster_idx' , 'baseline_cluster_idx' , ...
-            'rasterSpikeTimes' , 'dffs' , 'bkg_subtracted_traces' , ...
-            'ROI_traces' , 'diffFeatures' , 'snappath' , 'textPos' , 'ROI_masks' , ...
-            'dff_snr');
     end
+    set(handles.info_txt , 'String' , 'Done!');
+catch ex1
+    set(handles.info_txt , 'String' , 'Error!');  
+    disp('--------------------ERROR!--------------------')
+    disp(getReport(ex1));
+    disp('----------------------------------------------')
+    
 end
+
 guidata(hObject, handles);
