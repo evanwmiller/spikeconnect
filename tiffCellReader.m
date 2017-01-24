@@ -1,4 +1,5 @@
 function backgroundStack = tiffCellReader(filepath, filenames)
+% Copyright 2016 The Miller Lab, UC Berkeley
     backgroundStack = cell(size(filenames));
     for index = 1:numel(filenames)
         filename = [filepath filenames{index}];

@@ -1,4 +1,7 @@
 function [clusters , spikes_cluster_idx , baseline_cluster_idx , rasterSpikeTime , dff1 , dff_snr] = kmeans_sd_with_dff_thresh3(trace_features , ROI_tracein , K , dff_thresh)
+% Core kmeans function
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
     % use polynomial regression to flatten the trace and calc df/f
     ROI_trace = traceFlattener(ROI_tracein , 1);
 %     baseline = median(ROI_trace);

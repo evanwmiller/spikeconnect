@@ -2,6 +2,8 @@ function raster_plot( rasterSpikeTimes , vidLength , plot_title)
 % rasterSpikeTime: a cell array. each cell contains the spike times of one ROI/neuron
 % vidLength: length of the experiment video
 % plot_title: raster plot title
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
     figure;
    
     ntrials = numel(rasterSpikeTimes); % number of trials

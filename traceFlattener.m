@@ -1,10 +1,8 @@
 function flattenedTrace = traceFlattener(trace , polynomial_order)
-     %------ Configuration Variables------
-%     polynomial_order = 10;
+% Flatten the trace using polynomial regression
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
     
-    %-----------------------------------
-
-    % Flatten the trace using polynomial regression
     timeStamps = 1:numel(trace);
     p = polyfit(timeStamps , trace , polynomial_order);
     y = polyval(p, timeStamps);

@@ -1,8 +1,9 @@
 function lbtrace = sliding_window_flattener ( trace , window_size)
-    % Inputs: A trace and window size 
-    % At each frame, the baseline is calculated as the mean of +/-widnow_size 
-    % excluding the current frame, and is subtracted from the current frame
-
+% Inputs: A trace and window size 
+% At each frame, the baseline is calculated as the mean of +/-widnow_size 
+% excluding the current frame, and is subtracted from the current frame
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
     vidLength = numel(trace);
     lbtrace = zeros(vidLength,1); 
     

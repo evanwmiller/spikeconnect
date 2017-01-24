@@ -24,7 +24,8 @@ function varargout = batchkmeans_gui2(varargin)
 
 % Last Modified by GUIDE v2.5 20-Nov-2016 22:18:06
 
-% Begin initialization code - DO NOT EDIT
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...

@@ -6,6 +6,7 @@ function alliFreqs = save_ifreq_xlsx(ifreqs , freqs , xlsxFileName ,sheetn ,sour
 % sheetn: a character vector containing the worksheet name or a positive 
 % integer indicating the worksheet index
 % Note: ifreqs and freqs should have similar sizes
+% Copyright 2016 The Miller Lab, UC Berkeley
 % Author: Kaveh Karbasi
 
 maxFreq = max(cell2mat(freqs)) - 1;

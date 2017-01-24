@@ -2,6 +2,8 @@
 % Applies logical mask to all frames of an image stack.
 % The mask and the image stack height and width should be the same.
 % Returns a masked stack of the same height, width, and length .
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
 
 function masked_tiff_stack = applyMask2TiffStack(tiff_stack , mask)
 

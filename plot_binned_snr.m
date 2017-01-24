@@ -1,5 +1,7 @@
 function plot_binned_snr(dff_vector , snr_vector , binrange)
-
+% Plots binned SNR
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
 colors = {'b','g','r','c','m','y','k'};
 dff_vector(isnan(dff_vector)) = [];
 snr_vector(isnan(snr_vector)) = [];

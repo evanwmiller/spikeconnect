@@ -24,7 +24,8 @@ function varargout = trace_browser(varargin)
 
 % Last Modified by GUIDE v2.5 07-Jul-2016 16:15:55
 
-% Begin initialization code - DO NOT EDIT
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...

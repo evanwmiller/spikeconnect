@@ -24,7 +24,8 @@ function varargout = thresholding_gui(varargin)
 
 % Last Modified by GUIDE v2.5 21-Oct-2016 16:02:23
 
-% Begin initialization code - DO NOT EDIT
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
 global rearm_factor;
 rearm_factor = 2;
 

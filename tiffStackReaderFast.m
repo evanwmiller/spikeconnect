@@ -1,4 +1,6 @@
 function tiffStack = tiffStackReaderFast(filename)
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi    
     warning('off', 'all');
     fileInfo=imfinfo(filename);
     frameW=fileInfo(1).Width;

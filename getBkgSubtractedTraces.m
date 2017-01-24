@@ -6,6 +6,8 @@ function [bkgSubtracted_traces , ROI_traces] = getBkgSubtractedTraces(tiffStack,
 % Output:
 % bkgSubtracted_traces: a cell array containing background subtracted
 % traces of ROIs
+% Copyright 2016 The Miller Lab, UC Berkeley
+% Author: Kaveh Karbasi
 bkgSubtracted_traces = cell(size(ROI_masks));
 ROI_traces = cell(size(ROI_masks));
 bkg_trace = applyMask2TiffStack(tiffStack , Bkg_mask);
