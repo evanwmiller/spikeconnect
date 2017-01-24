@@ -275,32 +275,20 @@ if FilterIndex~=0
     
     save([path file] , 'ROI_masks' , 'stackpath' , 'text_handles' ,'snappath' , 'textPos' )
     delete(wh);
-%     disp('Saving ROIs and tiff stack...')
+
     set(handles.info_text , 'String' , 'Data saved! Press any key to continue...');
     if bkg_curr_val == 0
-        bkg_image_stack = tiffCellReader(StackPathName, StackFileName);
-        bkg_cell_stack = {numel(bkg_image_stack)};
+        bkg_image = tiffImageReader(StackPathName, StackFileName{1});
         axes(handles.image_axes);
-        for index=1:numel(bkg_image_stack)
-            set(handles.info_text , 'String' , sprintf('Draw a region of background for movie #%d.', index))
-    %         for ii = 1:numel(ROI_handles)
-    %             ROI_handles{ii}.delete()
-    %             t = text_handles{ii};
-    %             delete(t);
-    % 
-    %         end
-    %         text_handles = {};
-    %         ROI_handles = {};
-
-            bkgmapH = imshow(imadjust(uint16(bkg_image_stack{index})));
-            parentbkgmapH = get(bkgmapH , 'parent');
-            h=imfreehand(parentbkgmapH);
-            set(handles.info_text , 'String' , 'Saving the background...')
-            bkg_cell_stack{index} = h.createMask();
-        end
-            disp('Saving background mask...')
-            save([path file] , 'bkg_cell_stack' , '-append')
-        set(handles.info_text , 'String' , 'Backgrounds saved! Press any key to continue...')
+        set(handles.info_text , 'String' , 'Draw a region of background.');
+        bkgmapH = imshow(imadjust(uint16(bkg_image)));
+        parentbkgmapH = get(bkgmapH , 'parent');
+        h=imfreehand(parentbkgmapH);
+        set(handles.info_text , 'String' , 'Saving the background...')
+        bkg_mask = h.createMask();
+        disp('Saving background mask...')
+        save([path file] , 'bkg_mask' , '-append')
+        set(handles.info_text , 'String' , 'Background saved! Press any key to continue...')
     end
 end
 warning ('on','all');
