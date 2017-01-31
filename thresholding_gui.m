@@ -167,6 +167,7 @@ for ff = 1:numel(stdFileNames)
     load(stdFileNames{ff} , 'rasterSpikeTimes' , 'dff_snr' , 'ROI_traces')
     ifreqs = {};
     freqs = {};
+    maxcount = 0;
     file_path = strsplit(stdFileNames{ff},{'/','\\'});
     spikeDataNote = file_path{end};
     hyphen_index = strfind(spikeDataNote,'-');
@@ -175,27 +176,35 @@ for ff = 1:numel(stdFileNames)
         period_index = strfind(spikeDataNote,'.');
         ifreq_note = spikeDataNote(hyphen_index(1):period_index(1)-1);
     end
-    
+    %get frame rate for the video
+    [pathstr,t1,t2] = fileparts(stdFileNames{ff}); 
+    if exist([pathstr filesep 'std.mat'],'file')
+        load([pathstr filesep 'std.mat'],'frame_rate','num_frames');
+    else
+        disp('Could not find frame_rate. Defaulting to 500 fps.');
+        frame_rate = 500;
+    end
     for dd = 1:numel(dff_snr)
         tmp = dff_snr{dd};
         tmp(tmp < thresh) = NaN;
         rasterSpikeTimes{dd} = find(~isnan(tmp));
        
         rasterSpikeTimes{dd} = burstAggregator(rasterSpikeTimes{dd} , rearm_factor);
-        [ifreqs{dd} , freqs{dd}] = ifreq(rasterSpikeTimes{dd}); 
-        freqs{dd} = freqs{dd}/10;
+        [ifreqs{dd} , freqs{dd}, count] = ifreq(rasterSpikeTimes{dd},frame_rate, num_frames); 
+        if count > maxcount
+            maxcount = count; % determines height of matrix for excel exporting
+        end
     end
     if exist(stdFileNames{ff}, 'file')
     save(stdFileNames{ff} ,  'rasterSpikeTimes' ,   '-append');
     else
         error('No spikesData.mat file exists')
-    end
-    [pathstr,t1,t2] = fileparts(stdFileNames{ff}); 
+    end 
     filename = ['ifreqs' ifreq_note '.mat'];
     if exist([pathstr filesep filename], 'file')
-      save([pathstr filesep filename] , 'ifreqs' , 'freqs' , '-append')
+      save([pathstr filesep filename] , 'ifreqs' , 'freqs' , 'maxcount', '-append')
     else
-      save([pathstr filesep filename], 'ifreqs' , 'freqs')
+      save([pathstr filesep filename], 'ifreqs' , 'freqs','maxcount')
     end
     
 end

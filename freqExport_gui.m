@@ -86,8 +86,8 @@ exportFiles = cellstr(get(handles.destination_listbox,'String'));
 iFreqs_all_files = [];
 freqs_all_files = [];
 for ff = 1:numel(exportFiles)
-    load(exportFiles{ff} , 'freqs' , 'ifreqs');
-    ifreqs_all = save_ifreq_xlsx(ifreqs , freqs , [xlsxPath xlsxFilename] , ff , exportFiles{ff});
+    load(exportFiles{ff} , 'freqs' , 'ifreqs','maxcount');
+    ifreqs_all = save_ifreq_xlsx(ifreqs , freqs ,maxcount, [xlsxPath xlsxFilename] , ff , exportFiles{ff});
     iFreqs_all_files = [iFreqs_all_files; ifreqs_all];
     freqs_all_files = [freqs_all_files; cell2mat(freqs)'];
     disp(['Saving data to ' xlsxPath xlsxFilename ' ... '])
@@ -233,11 +233,13 @@ function select_files_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 global stdFileNames src_selected_str src_selected_idx;
-
 selected_radio = get(handles.folder_selection_radiogroup , 'SelectedObject');
 selected_string = get(selected_radio , 'String');
 if strcmp(selected_string , 'Recursive')
     baseDir = uigetdir('' , 'Select a folder');
+    if(baseDir == 0)
+        return
+    end
     stdFileNames = recursdir(baseDir , '^ifreqs.*.mat$');
    
 elseif strcmp(selected_string , 'Multi-select')

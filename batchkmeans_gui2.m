@@ -58,6 +58,7 @@ handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+movegui(gcf,'center')
 
 % UIWAIT makes batchkmeans_gui2 wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -109,12 +110,18 @@ try
             warning('off' , 'all');
             tiffStack = tiffStackReaderFast(curr_file_path);
             warning('on' , 'all');
+            
+            %update std.mat with number of frames
+            [mov_h,mov_w,num_frames] = size(tiffStack);
+            save(stdFileNames{ff},'num_frames','-append');
 
             selected_radio = get(handles.bkg_radiob , 'SelectedObject');
             selected_string = get(selected_radio , 'String');
-
-            [bkg_subtracted_traces , ROI_traces] = getBkgSubtractedTraces(tiffStack , ROI_masks , bkg_cell_stack{curr_file_index-1},selected_string);
-
+            if exist('bkg_mask')
+                [bkg_subtracted_traces , ROI_traces] = getBkgSubtractedTraces(tiffStack , ROI_masks , bkg_mask, selected_string);
+            else %bandaid fix to maintain compatability with bkg_mask vs bkg_cell_stack (relic)
+                [bkg_subtracted_traces , ROI_traces] = getBkgSubtractedTraces(tiffStack , ROI_masks , bkg_cell_stack{curr_file_index-1},selected_string);
+            end
             sizeTraces = size(bkg_subtracted_traces);
             diffFeatures = cell(sizeTraces);
             clusters = cell(sizeTraces);

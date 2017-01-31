@@ -64,7 +64,7 @@ if exist(settings_file,'file')
     load(settings_file)
     set(handles.frame_rate_text, 'String', frame_rate);
 else
-    set(handles.frame_rate_text, 'String', '200');
+    set(handles.frame_rate_text, 'String', '500');
 end
 
 % UIWAIT makes settings wait for user response (see UIRESUME)

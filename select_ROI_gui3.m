@@ -60,6 +60,7 @@ handles.output = hObject;
 handles.colors = hsv(25);
 % Update handles structure
 guidata(hObject, handles);
+movegui(gcf,'center')
 settings_file = [fileparts(mfilename('fullpath')) filesep 'settings.mat'];
 if exist(settings_file,'file')
     load(settings_file)
@@ -130,6 +131,7 @@ handles.colors = handles.colors(randperm(size(handles.colors,1)),:);
 baseDir = '';
 disp('SELECT A SNAP FILE...');
 [SnapFileName,SnapPathName] = uigetfile([baseDir '*.tiff'],'Select a .tif SNAP file');
+
 if(SnapFileName == 0)
     return
 end

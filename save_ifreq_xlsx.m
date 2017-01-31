@@ -1,6 +1,6 @@
-function alliFreqs = save_ifreq_xlsx(ifreqs , freqs , xlsxFileName ,sheetn ,sourceFileName)
+function alliFreqs = save_ifreq_xlsx(ifreqs , freqs ,maxcount, xlsxFileName ,sheetn ,sourceFileName)
 % ifreqs: a cell array containing a set of ROIs' instantaneous frequencies
-% freqs: a cell array containgin a set of ROIs' frequencies
+% freqs: a cell array containing a set of ROIs' frequencies
 % xlsxFileName: Excel filename to which data is saved (format should be
 % [filename].xlsx)
 % sheetn: a character vector containing the worksheet name or a positive 
@@ -9,9 +9,9 @@ function alliFreqs = save_ifreq_xlsx(ifreqs , freqs , xlsxFileName ,sheetn ,sour
 % Copyright 2016 The Miller Lab, UC Berkeley
 % Author: Kaveh Karbasi
 
-maxFreq = max(cell2mat(freqs)) - 1;
+matsize = maxcount - 1; % size matrix to maximum number of ifreqs
 numROIs = numel(ifreqs);
-outMat = zeros(maxFreq , numROIs);
+outMat = zeros(matsize , numROIs);
 colTitles = cell(1,numROIs);
 alliFreqs = [];
 for ff = 1:numel(ifreqs)
@@ -27,16 +27,16 @@ outMat(outMat == 0) = nan;
 
 writetable(table({sourceFileName}) ,xlsxFileName ,'Sheet', sheetn, 'Range' , 'A1' , 'WriteVariableNames' , false);
 
-writetable(table({'Freqs'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['A' num2str(maxFreq + 6)] , 'WriteVariableNames' , false);
+writetable(table({'Freqs'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['A' num2str(matsize + 6)] , 'WriteVariableNames' , false);
 
 if ~isempty(cell2mat(freqs))
-    writetable(table(cell2mat(freqs)') ,xlsxFileName,'Sheet', sheetn, 'Range' , ['B' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
+    writetable(table(cell2mat(freqs)') ,xlsxFileName,'Sheet', sheetn, 'Range' , ['B' num2str(matsize + 7)] , 'WriteVariableNames' , false);
 end
 
-writetable(table({'Inst. Freqs (all ROIs)'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['E' num2str(maxFreq + 6)] , 'WriteVariableNames' , false);
+writetable(table({'Inst. Freqs (all ROIs)'}) ,xlsxFileName,'Sheet', sheetn,  'Range' , ['E' num2str(matsize + 6)] , 'WriteVariableNames' , false);
 
 if ~isempty(alliFreqs)
-    writetable(table(alliFreqs) ,xlsxFileName,'Sheet', sheetn, 'Range' , ['E' num2str(maxFreq + 7)] , 'WriteVariableNames' , false);
+    writetable(table(alliFreqs) ,xlsxFileName,'Sheet', sheetn, 'Range' , ['E' num2str(matsize + 7)] , 'WriteVariableNames' , false);
 end
 
 writetable(table({'Inst. Freqs'}) ,xlsxFileName ,'Sheet', sheetn, 'Range' , 'A3' , 'WriteVariableNames' , false);
