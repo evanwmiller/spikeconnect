@@ -82,6 +82,7 @@ function export_button_Callback(hObject, eventdata, handles)
 
 [xlsxFilename, xlsxPath] = uiputfile({'*.xlsx' ; '*.xls'} , 'Save as' , 'export.xlsx');
 
+wh = busydlg('Saving Data... Please Wait...');
 exportFiles = cellstr(get(handles.destination_listbox,'String'));
 iFreqs_all_files = [];
 freqs_all_files = [];
@@ -101,7 +102,7 @@ writetable(table(freqs_all_files) , [xlsxPath xlsxFilename] ,'Sheet',...
     ff+1,  'Range' , 'C2' , 'WriteVariableNames' , false);
 writetable(table({'Frequencies (All Files)'}) ,[xlsxPath xlsxFilename] ,...
     'Sheet', ff+1, 'Range' , 'C1' , 'WriteVariableNames' , false);
-
+delete(wh);
 
 
 
