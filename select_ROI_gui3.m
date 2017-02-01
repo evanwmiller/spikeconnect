@@ -22,7 +22,7 @@ function varargout = select_ROI_gui3(varargin)
 
 % Edit the above text to modify the response to help select_ROI_gui3
 
-% Last Modified by GUIDE v2.5 24-Jan-2017 15:55:50
+% Last Modified by GUIDE v2.5 19-Oct-2016 18:22:01
 
 % Copyright 2016 The Miller Lab, UC Berkeley
 % Author: Kaveh Karbasi
@@ -60,13 +60,6 @@ handles.output = hObject;
 handles.colors = hsv(25);
 % Update handles structure
 guidata(hObject, handles);
-settings_file = [fileparts(mfilename('fullpath')) filesep 'settings.mat'];
-if exist(settings_file,'file')
-    load(settings_file)
-    set(handles.frame_rate_text, 'String', frame_rate);
-else
-    set(handles.frame_rate_text, 'String', '200');
-end
 
 % UIWAIT makes select_ROI_gui3 wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -253,18 +246,10 @@ warning ('off','all');
 % handles    structure with handles and user data (see GUIDATA)
 global ROI_handles ROI_counter SnapPathName StackFileName StackPathName bkg_curr_val;
 global tiffStack text_handles SnapFileName;
-
-% Error Checking
 if ROI_counter == 1
-    warndlg('Please select at least one ROI.')
+    disp('Please select at least one ROI.')
     return
 end
-
-frame_rate = str2num(get(handles.frame_rate_text,'String'));
-if isempty(frame_rate) || rem(frame_rate,1) ~= 0 %check if integer
-    warndlg('Specified frame rate must be an integer.');
-end
-
 ROI_masks = {};
 textPos = {};
 for rr = 1:numel(ROI_handles)
@@ -288,22 +273,34 @@ if FilterIndex~=0
     snappath = [SnapPathName SnapFileName];
     
     
-    save([path file] , 'ROI_masks' , 'stackpath' , 'text_handles' ,'snappath' , 'textPos','frame_rate')
+    save([path file] , 'ROI_masks' , 'stackpath' , 'text_handles' ,'snappath' , 'textPos' )
     delete(wh);
-
+%     disp('Saving ROIs and tiff stack...')
     set(handles.info_text , 'String' , 'Data saved! Press any key to continue...');
     if bkg_curr_val == 0
-        bkg_image = tiffImageReader(StackPathName, StackFileName{1});
+        bkg_image_stack = tiffCellReader(StackPathName, StackFileName);
+        bkg_cell_stack = {numel(bkg_image_stack)};
         axes(handles.image_axes);
-        set(handles.info_text , 'String' , 'Draw a region of background.');
-        bkgmapH = imshow(imadjust(uint16(bkg_image)));
-        parentbkgmapH = get(bkgmapH , 'parent');
-        h=imfreehand(parentbkgmapH);
-        set(handles.info_text , 'String' , 'Saving the background...')
-        bkg_mask = h.createMask();
-        disp('Saving background mask...')
-        save([path file] , 'bkg_mask' , '-append')
-        set(handles.info_text , 'String' , 'Background saved! Press any key to continue...')
+        for index=1:numel(bkg_image_stack)
+            set(handles.info_text , 'String' , sprintf('Draw a region of background for movie #%d.', index))
+    %         for ii = 1:numel(ROI_handles)
+    %             ROI_handles{ii}.delete()
+    %             t = text_handles{ii};
+    %             delete(t);
+    % 
+    %         end
+    %         text_handles = {};
+    %         ROI_handles = {};
+
+            bkgmapH = imshow(imadjust(uint16(bkg_image_stack{index})));
+            parentbkgmapH = get(bkgmapH , 'parent');
+            h=imfreehand(parentbkgmapH);
+            set(handles.info_text , 'String' , 'Saving the background...')
+            bkg_cell_stack{index} = h.createMask();
+        end
+            disp('Saving background mask...')
+            save([path file] , 'bkg_cell_stack' , '-append')
+        set(handles.info_text , 'String' , 'Backgrounds saved! Press any key to continue...')
     end
 end
 warning ('on','all');
@@ -402,26 +399,3 @@ function trace_button_Callback(hObject, eventdata, handles)
 figure('Position', [100, 100, 800, 200]);
 plot(meanTrace)
 title(['ROI ' num2str(index_selected)  ' mean trace'])
-
-
-
-function frame_rate_text_Callback(hObject, eventdata, handles)
-% hObject    handle to frame_rate_text (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of frame_rate_text as text
-%        str2double(get(hObject,'String')) returns contents of frame_rate_text as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function frame_rate_text_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to frame_rate_text (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end

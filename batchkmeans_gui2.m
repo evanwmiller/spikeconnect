@@ -139,7 +139,7 @@ try
                 note = [note stdname(4:end)];
             end
             if length(curr_file_name) >= 6 && isstrprop(curr_file_name(end-5),'digit')
-                note = [note '-' curr_file_name(end-5)];
+                note = [note '-' curr_file_name(strfind(curr_file_name , '-')+1:end-5)];
             end
             [pathstr,t1,t2] = fileparts(stdFileNames{ff});
             disp(['Saving data to ' pathstr '/spikesData' note '.mat'])
