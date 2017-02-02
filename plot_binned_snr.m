@@ -1,4 +1,4 @@
-function plot_binned_snr(dff_vector , snr_vector , binrange)
+function plot_binned_snr(dff_vector, snr_vector ,binrange)
 % Plots binned SNR
 % Copyright 2016 The Miller Lab, UC Berkeley
 % Author: Kaveh Karbasi
@@ -7,7 +7,7 @@ dff_vector(isnan(dff_vector)) = [];
 snr_vector(isnan(snr_vector)) = [];
 spaxes = {}; 
 figure;
-title('plot of SNR distributions of data binned by  their DFF')   
+title('plot of SNR distributions of data binned by their DFF')   
 maxIdx = 1;
 maxYlim = 0; 
 for ii = 1 : numel(binrange) - 1

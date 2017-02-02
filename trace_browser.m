@@ -287,7 +287,6 @@ curr_file = stdFileNames{curr_file_idx};
 [pathstr,~ ,~] = fileparts(curr_file);
 wh = busydlg('Saving figure snapshot...');
 imwrite(traceIm , [pathstr  '\ROI_' num2str(curr_ROI_idx) '_trace.jpg'])
-
 delete(wh)
 guidata(hObject, handles);
 

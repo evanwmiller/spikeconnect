@@ -1,5 +1,6 @@
-function flattenedTrace = traceFlattener(trace , polynomial_order)
-% Flatten the trace using polynomial regression
+function flattenedTrace = traceflattener(trace, polynomial_order)
+% TRACEFLATTERNER Flatten the trace using polynomial regression.
+
 % Copyright 2016 The Miller Lab, UC Berkeley
 % Author: Kaveh Karbasi
     
@@ -9,6 +10,4 @@ function flattenedTrace = traceFlattener(trace , polynomial_order)
     minY = min(y);
     flatY = y-minY;
     flattenedTrace = trace - flatY;
-
-
 end

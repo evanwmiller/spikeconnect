@@ -1,11 +1,12 @@
-function backgroundStack = tiffImageReader(filepath, file)
-% Copyright 2016 The Miller Lab, UC Berkeley
-        filename = [filepath file];
-        fileInfo=imfinfo(filename);
-        frameW=fileInfo(1).Width;
-        frameH=fileInfo(1).Height;
+function firstImage = tiffimagereader(filePath, file)
+% TIFFIMAGEREADER Reads the first frame from a tiff stack.
 
-        tiffObj = Tiff(filename, 'r');
-        tiffObj.setDirectory(1);
-        backgroundStack = tiffObj.read();   
+% Copyright 2016 The Miller Lab, UC Berkeley
+warning('off','all');
+filename = [filePath file];
+fileInfo=imfinfo(filename);
+tiffObj = Tiff(filename, 'r');
+tiffObj.setDirectory(1);
+firstImage = tiffObj.read();  
+warning('on','all');
 end

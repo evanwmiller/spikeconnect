@@ -1,4 +1,4 @@
-function lbtrace = sliding_window_flattener ( trace , window_size)
+function lbtrace = slidingwindowflattener ( trace , window_size)
 % Inputs: A trace and window size 
 % At each frame, the baseline is calculated as the mean of +/-widnow_size 
 % excluding the current frame, and is subtracted from the current frame
