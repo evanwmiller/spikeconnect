@@ -37,7 +37,7 @@ function thresholding_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for thresholding_gui
 handles.output = hObject;
-
+movegui(gcf,'center') 
 % Update handles structure
 guidata(hObject, handles);
 

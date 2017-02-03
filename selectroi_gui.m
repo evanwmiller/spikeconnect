@@ -45,7 +45,7 @@ function selectroi_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 handles.output = hObject;
 handles.colors = hsv(25);
-handles.disableCD = 0;
+handles.keyEventStage = 0;
 DEFAULT_FRAME_RATE = 500;
 % Update handles structure
 guidata(hObject, handles);
@@ -69,6 +69,7 @@ function snap_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+%reset
 
 handles.colors = handles.colors(randperm(size(handles.colors,1)),:);
 
@@ -159,6 +160,7 @@ guidata(hObject, handles);
 % --- Executes on key press with focus on figure1 and none of its controls.
 function figure1_KeyPressFcn(hObject, eventdata, handles)
 % Listens for 'c' and 'd' keypresses to draw and delete ROIs.
+% When selecting background, listens for 'b' and 'return' keypresses.
 %
 % hObject    handle to figure1 (see GCBO)
 % eventdata  structure with the following fields (see FIGURE)
@@ -166,11 +168,11 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'parentMapH') || handles.disableCD
+if ~isfield(handles,'parentMapH')
     return
 end
 
-if eventdata.Key == 'c'
+if strcmp(eventdata.Key,'c') && (handles.keyEventStage == 0)
     set(handles.info_text , 'String' , 'Draw an ROI')
     roi=imfreehand(handles.parentMapH);
     handles.roiHandles{handles.roiCounter} = roi;
@@ -185,9 +187,8 @@ if eventdata.Key == 'c'
     addtolistbox(handles.ROI_list , num2str(handles.roiCounter));
     
     handles.roiCounter = handles.roiCounter + 1;
-end
 
-if eventdata.Key == 'd'
+elseif strcmp(eventdata.Key,'d') && (handles.keyEventStage == 0)
     indexSelected = get(handles.ROI_list, 'Value');
     deletefromlistbox(handles.ROI_list, indexSelected);
     if numel(handles.roiHandles) > 0
@@ -206,9 +207,28 @@ if eventdata.Key == 'd'
         end
         set(handles.ROI_list , 'String' , num2str([1:handles.roiCounter-1]'))
     end
+    
+elseif strcmp(eventdata.Key,'b') && (handles.keyEventStage == 1)
+    handles.backgroundHandle = drawbackground(handles);
+
+elseif strcmp(eventdata.Key,'return') && (handles.keyEventStage == 1)
+    savebackground(hObject, handles);
+    return
+    
+elseif (handles.keyEventStage == 2)
+    if strcmp(eventdata.Key,'n')
+        close(gcbf);
+        batchkmeans_gui;
+        return
+    else
+        close(gcbf);
+        selectroi_gui;
+        return
+    end
+else
+    return
 end
 guidata(hObject, handles);
-
 
 % --- Executes on key press with focus on ROI_list and none of its controls.
 function ROI_list_KeyPressFcn(hObject, eventdata, handles)
@@ -221,14 +241,15 @@ function ROI_list_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'parentMapH') || handles.disableCD
+if ~isfield(handles,'parentMapH')
     return
 end
 
-if eventdata.Key == 'c'
+if strcmp(eventdata.Key,'c') && (handles.keyEventStage == 0)
     set(handles.info_text , 'String' , 'Draw an ROI')
     roi=imfreehand(handles.parentMapH);
     handles.roiHandles{handles.roiCounter} = roi;
+    handles.roiMasks{handles.roiCounter} = roi.createMask();
     
     % Draws the ROI number on top of the image.
     pos = roi.getPosition();
@@ -239,9 +260,8 @@ if eventdata.Key == 'c'
     addtolistbox(handles.ROI_list , num2str(handles.roiCounter));
     
     handles.roiCounter = handles.roiCounter + 1;
-end
 
-if eventdata.Key == 'd'
+elseif strcmp(eventdata.Key,'d') && (handles.keyEventStage == 0)
     indexSelected = get(handles.ROI_list, 'Value');
     deletefromlistbox(handles.ROI_list, indexSelected);
     if numel(handles.roiHandles) > 0
@@ -260,8 +280,64 @@ if eventdata.Key == 'd'
         end
         set(handles.ROI_list , 'String' , num2str([1:handles.roiCounter-1]'))
     end
+    
+elseif strcmp(eventdata.Key,'b') && (handles.keyEventStage == 1)
+    handles.backgroundHandle = drawbackground(handles);
+
+elseif strcmp(eventdata.Key,'return') && (handles.keyEventStage == 1)
+    savebackground(hObject, handles);
+    return
+    
+elseif (handles.keyEventStage == 2)
+    if strcmp(eventdata.Key,'n')
+        close(gcbf);
+        batchkmeans_gui;
+        return
+    else
+        close(gcbf);
+        selectroi_gui;
+        return
+    end
+else
+    return
 end
 guidata(hObject, handles);
+
+
+function backgroundHandle = drawbackground(handles)
+% Takes the first frame of the first movie.
+bkgImage = tiffimagereader(handles.stackDir, handles.stackFile{1});
+axes(handles.image_axes);
+set(handles.info_text , 'String' , 'Draw a region of background.');
+bkgmapH = imshow(imadjust(uint16(bkgImage)));
+parentbkgmapH = get(bkgmapH , 'parent');
+backgroundHandle=imfreehand(parentbkgmapH);
+message = 'Press Return key to save or ''B'' to redraw.';
+set(handles.info_text, 'String', message);
+
+function savebackground(hObject, handles)
+% Creates a mask from the backgroundHandle and saves it as bkgMask in the
+% roi-***.mat file.
+
+%background has not been selected yet so do nothing.
+if ~isfield(handles,'backgroundHandle')
+    return
+end
+
+[~, note, ~] = fileparts(handles.snapFile);
+roiFileSavePath = [handles.snapDir 'roi-' note '.mat'];
+
+set(handles.info_text , 'String' , 'Saving the background...')
+bkgMask = handles.backgroundHandle.createMask();
+disp('Saving background mask...')
+save(roiFileSavePath, 'bkgMask' , '-append')
+message = ['Background saved! Press ''N'' to go to kbatchmeans. '...
+    'Press any other key to repeat selectROI.'];
+set(handles.info_text,'String', message);
+
+handles.keyEventStage = 2;
+guidata(hObject,handles);
+
 
 
 % --- Executes on button press in save_ROI_button.
@@ -272,7 +348,6 @@ function save_ROI_button_Callback(hObject, eventdata, handles)
 % hObject    handle to save_ROI_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 if handles.roiCounter == 1
     warndlg('Please select at least one ROI.')
     return
@@ -295,34 +370,20 @@ end
 
 [~, note, ~] = fileparts(handles.snapFile);
 roiFileSavePath = [handles.snapDir 'roi-' note '.mat'];
-fprintf('Saving ROIs and tiff stack to %s.', roiFileSavePath)
+fprintf('Saving ROIs to %s. \n', roiFileSavePath)
 
 stackPaths = strcat(handles.stackDir,handles.stackFile);
 snapPath = [handles.snapDir handles.snapFile];
 busyDialog = busydlg('Saving ROIs...');
 save(roiFileSavePath, 'stackPaths','snapPath' , 'textPos','frameRate')
 save(roiFileSavePath, '-struct','handles','roiMasks','textHandles','-append');
-close(busyDialog);
-% disable the event pressing for 'c' and 'd'
-handles.disableCD = 1;
+delete(busyDialog);
 
-%Takes the first frame of the first movie.
-bkgImage = tiffimagereader(handles.stackDir, handles.stackFile{1});
-axes(handles.image_axes);
-set(handles.info_text , 'String' , 'Draw a region of background.');
-bkgmapH = imshow(imadjust(uint16(bkgImage)));
-parentbkgmapH = get(bkgmapH , 'parent');
-h=imfreehand(parentbkgmapH);
-set(handles.info_text , 'String' , 'Saving the background...')
-bkgMask = h.createMask();
-disp('Saving background mask...')
-save(roiFileSavePath, 'bkgMask' , '-append')
-set(handles.info_text, 'String' , 'Background saved! Press any key to continue...')
+% disable the event pressing for 'c' and 'd'
+handles.keyEventStage = 1;
+handles.backgroundHandle = drawbackground(handles);
 
 guidata(hObject, handles);
-waitforbuttonpress;
-close(gcbf);
-selectroi_gui;
 
 
 % --- Executes on button press in trace_button.
