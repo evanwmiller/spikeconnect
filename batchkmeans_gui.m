@@ -43,7 +43,7 @@ function batchkmeans_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for batchkmeans_gui
 handles.output = hObject;
-
+handles.listenForTKey = 0;
 % Update handles structure
 guidata(hObject, handles);
 movegui(gcf,'center')
@@ -69,6 +69,7 @@ if baseDir == 0
     set(handles.radiobutton3 , 'Enable' , 'on');
     return
 end
+handles.listenForTKey = 0;
 set(handles.folder_text , 'String' , baseDir)
 roiFilePaths = recursdir(baseDir , '^roi.*\.mat$');
 WINDOW = 50;
@@ -112,11 +113,27 @@ for iRoiFile = 1:numel(roiFilePaths)
          'roiTraces','diffFeatures','snapPath', 'textPos', 'roiMasks');
     end
 end
-set(handles.info_txt , 'String' , 'Done!');
+set(handles.info_txt , 'String' , 'Done! Press ''T'' to proceed to thresholding or select another folder for processing.');
+handles.listenForTKey = 1;
 
 guidata(hObject, handles);
 
+
+% --- Executes on key press with focus on folder_button and none of its controls.
+function folder_button_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+if (handles.listenForTKey) && strcmp(eventdata.Key,'t')
+    close(gcbf)
+    thresholding_gui;
+end
+
 % ********** UNUSED GUIDE FUNCTIONS **********
+
 % --- Outputs from this function are returned to the command line.
 function varargout = batchkmeans_gui_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
