@@ -17,3 +17,4 @@ else
     newList = [prevList; {item}];
     set(listboxHandle, 'String', newList)
 end
+set(listboxHandle, 'Value',numel(get(listboxHandle,'String')));

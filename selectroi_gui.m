@@ -206,6 +206,7 @@ elseif strcmp(eventdata.Key,'d') && (handles.keyEventStage == 0)
             set(handles.textHandles{tt} , 'String' , newtxt);
         end
         set(handles.ROI_list , 'String' , num2str([1:handles.roiCounter-1]'))
+        set(handles.ROI_list, 'Value', handles.roiCounter-1);
     end
     
 elseif strcmp(eventdata.Key,'b') && (handles.keyEventStage == 1)
@@ -279,6 +280,7 @@ elseif strcmp(eventdata.Key,'d') && (handles.keyEventStage == 0)
             set(handles.textHandles{tt} , 'String' , newtxt);
         end
         set(handles.ROI_list , 'String' , num2str([1:handles.roiCounter-1]'))
+        set(handles.ROI_list, 'Value', handles.roiCounter-1);
     end
     
 elseif strcmp(eventdata.Key,'b') && (handles.keyEventStage == 1)
