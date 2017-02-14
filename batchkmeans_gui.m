@@ -109,7 +109,7 @@ for iRoiFile = 1:numel(roiFilePaths)
         [stackDir,stackName,~] = fileparts(currentStackPath);
         saveDir = [stackDir '/spikes-' stackName '.mat'];
         disp(['Saving data to ' saveDir])
-        save(saveDir,'spikeDataArray','bkgSubtractedTraces' ,...
+        save(saveDir,'spikeDataArray','frameRate','bkgSubtractedTraces' ,...
          'roiTraces','diffFeatures','snapPath', 'textPos', 'roiMasks');
     end
 end
