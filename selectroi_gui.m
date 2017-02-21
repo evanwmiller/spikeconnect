@@ -76,7 +76,7 @@ handles.colors = handles.colors(randperm(size(handles.colors,1)),:);
 baseDir = '';
 disp('SELECT A SNAP FILE...');
 [handles.snapFile,handles.snapDir] = uigetfile(...
-    [baseDir '*.tiff'],'Select a .tif SNAP file');
+    '*.tiff;*.tif','Select a .tif SNAP file');
 
 if(handles.snapFile == 0)
     return
