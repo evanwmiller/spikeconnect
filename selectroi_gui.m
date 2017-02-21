@@ -46,19 +46,26 @@ function selectroi_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 handles.colors = hsv(25);
 handles.keyEventStage = 0;
-DEFAULT_FRAME_RATE = 500;
+defaultFrameRate = 500;
+handles.baseDir = '';
 % Update handles structure
 guidata(hObject, handles);
 movegui(gcf,'center')
 
-% Load default frame rate from prefs.mat (if it exists).
+set(handles.frame_rate_text, 'String', num2str(defaultFrameRate));
+% Load preferences from prefs.mat (if it exists).
 prefsFile = [fileparts(mfilename('fullpath')) filesep 'prefs.mat'];
 if exist(prefsFile,'file')
     load(prefsFile)
-    set(handles.frame_rate_text, 'String', frameRate);
-else
-    set(handles.frame_rate_text, 'String', num2str(DEFAULT_FRAME_RATE));
+    if exist('frameRate','var')
+        set(handles.frame_rate_text, 'String', frameRate);
+    end
+    if exist('baseDir','var')
+        handles.baseDir = baseDir;
+    end
 end
+
+% Load
 
 
 % --- Executes on button press in snap_button.
@@ -76,7 +83,7 @@ handles.colors = handles.colors(randperm(size(handles.colors,1)),:);
 baseDir = '';
 disp('SELECT A SNAP FILE...');
 [handles.snapFile,handles.snapDir] = uigetfile(...
-    '*.tiff;*.tif','Select a .tif SNAP file');
+    fullfile(baseDir,'*.tiff;*.tif'),'Select a .tif SNAP file');
 
 if(handles.snapFile == 0)
     return
@@ -116,7 +123,7 @@ end
 
 disp('SELECT A STACK FILE...');
 [handles.stackFile, handles.stackDir] = uigetfile(...
-    [handles.snapDir '*.tiff'],'Select a .tif STACK file');
+    fullfile(handles.snapDir,'*.tiff;*.tif'),'Select a .tif STACK file');
 
 if(handles.stackFile == 0)
     return
@@ -145,13 +152,13 @@ if ~isfield(handles,'snapDir')
 end
 
 % match all .tiff files except the snap
-handles.stackFile = currentdir(handles.snapDir, '\.tiff', handles.snapFile);
+handles.stackFile = currentdir(handles.snapDir, '\.tif', handles.snapFile);
 disp('Files Found:')
 disp(handles.stackFile)
 handles.stackDir = handles.snapDir;
 set(handles.stack_fn_text, 'String', handles.stackFile);
 if numel(handles.stackFile) == 0
-    warndlg('No other .tiff files found.')
+    warndlg('No other .tif/.tiff files found.')
 end
 guidata(hObject, handles);
 

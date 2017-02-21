@@ -60,7 +60,7 @@ movegui(gcf,'center')
 prefsFile = [fileparts(mfilename('fullpath')) filesep 'prefs.mat'];
 if exist(prefsFile,'file')
     load(prefsFile)
-    set(handles.frame_rate_text, 'String', frame_rate);
+    set(handles.frame_rate_text, 'String', frameRate);
 else
     set(handles.frame_rate_text, 'String', '500');
 end

@@ -189,21 +189,12 @@ function save_button_Callback(hObject, eventdata, handles)
 handles.rearmFactor = getrearmfactor(handles);
 
 for iSpikeFile = 1:numel(handles.spikeFilePaths)
-    load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray', 'roiTraces');
+    load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray', ...
+        'roiTraces', 'frameRate');
     ifreqs = {};
     freqs = {};
     % maxCount determines height of matrix for excel exporting
     maxCount = 0;
-
-    % get frame rate for the video
-    [pathstr,~,~] = fileparts(handles.spikeFilePaths{iSpikeFile});
-    prefsFile = [fileparts(mfilename('fullpath')) filesep 'prefs.mat'];
-    if exist(prefsFile,'file')
-        load(prefsFile,'frameRate');
-    else
-        disp('Could not find frame_rate. Defaulting to 500 fps.');
-        frameRate = 500;
-    end
     
     % get number of frames per video
     nFrame = numel(spikeDataArray{1}.dffSnr);
