@@ -47,9 +47,8 @@ handles.output = hObject;
 handles.colors = hsv(25);
 handles.keyEventStage = 0;
 defaultFrameRate = 500;
-handles.baseDir = '';
-% Update handles structure
-guidata(hObject, handles);
+handles.defaultDir = '';
+
 movegui(gcf,'center')
 
 set(handles.frame_rate_text, 'String', num2str(defaultFrameRate));
@@ -60,12 +59,13 @@ if exist(prefsFile,'file')
     if exist('frameRate','var')
         set(handles.frame_rate_text, 'String', frameRate);
     end
-    if exist('baseDir','var')
-        handles.baseDir = baseDir;
+    if exist('defaultDir','var')
+        handles.defaultDir = defaultDir;
     end
 end
 
-% Load
+% Update handles structure
+guidata(hObject, handles);
 
 
 % --- Executes on button press in snap_button.
@@ -76,14 +76,11 @@ function snap_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-%reset
-
 handles.colors = handles.colors(randperm(size(handles.colors,1)),:);
 
-baseDir = '';
 disp('SELECT A SNAP FILE...');
 [handles.snapFile,handles.snapDir] = uigetfile(...
-    fullfile(baseDir,'*.tiff;*.tif'),'Select a .tif SNAP file');
+    fullfile(handles.defaultDir,'*.tiff;*.tif'),'Select a .tif SNAP file');
 
 if(handles.snapFile == 0)
     return
