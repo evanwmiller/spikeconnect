@@ -38,6 +38,10 @@ function thresholding_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for thresholding_gui
 handles.output = hObject;
 movegui(gcf,'center') 
+
+%set rearm factor to 3 by default
+set(handles.rearm_popup,'Value',3);
+
 % Update handles structure
 guidata(hObject, handles);
 

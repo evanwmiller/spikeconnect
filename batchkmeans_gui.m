@@ -132,6 +132,18 @@ if (handles.listenForTKey) && strcmp(eventdata.Key,'t')
     thresholding_gui;
 end
 
+function figure1_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+if (handles.listenForTKey) && strcmp(eventdata.Key,'t')
+    close(gcbf)
+    thresholding_gui;
+end
+
 % ********** UNUSED GUIDE FUNCTIONS **********
 
 % --- Outputs from this function are returned to the command line.
@@ -143,3 +155,8 @@ function varargout = batchkmeans_gui_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
+function figure1_KeyReleaseFcn(hObject, eventdata, handles)
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

@@ -377,6 +377,13 @@ fprintf('Saving ROIs to %s. \n', roiFileSavePath)
 stackPaths = strcat(handles.stackDir,handles.stackFile);
 snapPath = [handles.snapDir handles.snapFile];
 busyDialog = busydlg('Saving ROIs...');
+
+%save the roi and numbering as png for reference
+snapFrame = getframe(handles.image_axes);
+snapWithRoiImage = frame2im(snapFrame);
+imageSavePath = [handles.snapDir 'label-' note '.png'];
+imwrite(snapWithRoiImage, imageSavePath);
+
 save(roiFileSavePath, 'stackPaths','snapPath' , 'textPos','frameRate')
 save(roiFileSavePath, '-struct','handles','roiMasks','textHandles','-append');
 delete(busyDialog);
@@ -473,4 +480,3 @@ function ROI_list_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
