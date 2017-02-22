@@ -216,7 +216,7 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
     end
     save(handles.spikeFilePaths{iSpikeFile} ,'spikeDataArray' ,'-append');
     
-    [~,movieName,~] = fileparts(handles.spikeFilePaths{iSpikeFile});
+    [pathstr,movieName,~] = fileparts(handles.spikeFilePaths{iSpikeFile});
     % 8 is length of 'spikes-' tag
     nameWithoutPrefix = movieName(8:end);
     filename = ['ifreqs-' nameWithoutPrefix '.mat'];
