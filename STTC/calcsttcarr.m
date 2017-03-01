@@ -31,4 +31,5 @@ for iRoi = 1:nRoi
         sttcArr(iRoi, jRoi) = sttc;          
     end
 end
+sttcArr(isnan(sttcArr))=0;
 

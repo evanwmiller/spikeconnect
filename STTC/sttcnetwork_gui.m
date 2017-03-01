@@ -65,7 +65,7 @@ if isempty(spikeFilePaths)
     errordlg('No files found');
     return;
 else
-    spikeFileNames = extractNames(spikeFilePaths);
+    spikeFileNames = extractNames(spikeFilePaths, baseDir);
     set(handles.fileListbox , 'String' , spikeFileNames);
     set(handles.fileListbox, 'Value', 1);
     handles.selectedFile = [handles.baseDir filesep spikeFileNames{1}];
@@ -156,7 +156,15 @@ function exportExcelButton_Callback(hObject, eventdata, handles)
 % hObject    handle to exportExcelButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+if isequal(handles.selectedFile,'')
+    errordlg('Please select a folder first.');
+    return;
+end
+defaultDir = fullfile(handles.baseDir,'..','*.xlsx');
+[excelName, excelDir] = uiputfile(defaultDir, 'Specify Excel File Path');
+if isequal(excelDir,0); return; end;
+excelPath = [excelDir excelName];
+sttctoexcel(handles.baseDir,excelPath,handles.sttcMaxLagMs);
 
 
 % ==================== PARAMETER UPDATES ===================== %
@@ -224,12 +232,11 @@ guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of splitLagCheck
 
 % ==================== UTILITY FUNCTIONS ==================== %
-function fileNames = extractNames(filePaths)
+function fileNames = extractNames(filePaths,baseDir)
 %EXTRACTNAMES Removes the folder portion from a cell array of file paths.
 fileNames = cell(size(filePaths));
 for i = 1:numel(filePaths)
-    [~,file,ext] = fileparts(filePaths{i});
-    fileNames{i} = [file ext];
+    fileNames{i} = strrep(filePaths{i},baseDir,'');
 end
 
 % ==================== UNUSED GUIDE FUNCTIONS ==================== %
