@@ -215,6 +215,9 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
         end
     end
     save(handles.spikeFilePaths{iSpikeFile} ,'spikeDataArray' ,'-append');
+    rearmFactor = handles.rearmFactor;
+    threshold = handles.threshold;
+    save(handles.spikeFilePaths{iSpikeFile}, 'rearmFactor','threshold','-append');
     
     [pathstr,movieName,~] = fileparts(handles.spikeFilePaths{iSpikeFile});
     % 8 is length of 'spikes-' tag
@@ -225,7 +228,6 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
     else
       save([pathstr filesep filename], 'ifreqs' , 'freqs','maxCount')
     end
-    
 end
 disp('Spike times updated and saved.')
 

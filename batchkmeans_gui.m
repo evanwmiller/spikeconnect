@@ -111,6 +111,9 @@ for iRoiFile = 1:numel(roiFilePaths)
         disp(['Saving data to ' saveDir])
         save(saveDir,'spikeDataArray','frameRate','bkgSubtractedTraces' ,...
          'roiTraces','diffFeatures','snapPath', 'textPos', 'roiMasks');
+        backgroundOption = selectedString;
+        save(saveDir,'backgroundOption','-append');
+        
     end
 end
 set(handles.info_txt , 'String' , 'Done! Press ''T'' to proceed to thresholding or select another folder for processing.');
