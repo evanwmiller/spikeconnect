@@ -191,10 +191,11 @@ handles.rearmFactor = getrearmfactor(handles);
 for iSpikeFile = 1:numel(handles.spikeFilePaths)
     load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray', ...
         'roiTraces', 'frameRate');
+    %instantaneous frequency
     ifreqs = {};
+    %interspike interval
+    isiMs = {};
     freqs = {};
-    % maxCount determines height of matrix for excel exporting
-    maxCount = 0;
     
     % get number of frames per video
     nFrame = numel(spikeDataArray{1}.dffSnr);
@@ -208,12 +209,10 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
         spikeDataArray{i}.rasterSpikeTimes = ...
             burstaggregator(spikeDataArray{i}.rasterSpikeTimes , handles.rearmFactor);
         
-        [ifreqs{i} , freqs{i}, count] = ...
+        [ifreqs{i}, isiMs{i}, freqs{i}] = ...
             ifreq(spikeDataArray{i}.rasterSpikeTimes,frameRate, nFrame); 
-        if count > maxCount
-            maxCount = count;
-        end
     end
+    
     save(handles.spikeFilePaths{iSpikeFile} ,'spikeDataArray' ,'-append');
     rearmFactor = handles.rearmFactor;
     threshold = handles.threshold;
@@ -224,9 +223,9 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
     nameWithoutPrefix = movieName(8:end);
     filename = ['ifreqs-' nameWithoutPrefix '.mat'];
     if exist([pathstr filesep filename], 'file')
-      save([pathstr filesep filename] , 'ifreqs' , 'freqs' , 'maxCount', '-append')
+      save([pathstr filesep filename] , 'ifreqs', 'isiMs', 'freqs' , '-append')
     else
-      save([pathstr filesep filename], 'ifreqs' , 'freqs','maxCount')
+      save([pathstr filesep filename], 'ifreqs' , 'isiMs', 'freqs')
     end
 end
 disp('Spike times updated and saved.')

@@ -32,6 +32,7 @@ function freqexport_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for freqexport_gui
 handles.output = hObject;
+movegui(gcf,'center')
 
 % Update handles structure
 guidata(hObject, handles);
@@ -41,34 +42,15 @@ function export_button_Callback(hObject, eventdata, handles)
 % hObject    handle to export_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-exportPaths = cellstr(get(handles.destination_listbox,'String'));
-if isempty(exportPaths) || isempty(exportPaths{1}); return; end;
+ifreqsFilePaths = cellstr(get(handles.destination_listbox,'String'));
+if isempty(ifreqsFilePaths) || isempty(ifreqsFilePaths{1}); return; end;
 
-[xlsxFileName, xlsxDir] = uiputfile({'*.xlsx' ; '*.xls'} , 'Save as' , 'export.xlsx');
-if isequal(xlsxFileName,0) || isequal(xlsxDir,0); return; end;
+defaultDir = fullfile(handles.baseDir,'*.xlsx');
+[excelName, excelDir] = uiputfile(defaultDir, 'Specify Excel File Path');
+if isequal(excelName,0) || isequal(excelDir,0); return; end;
 
-xlsxPath = [xlsxDir xlsxFileName];
-
-iFreqsAll = [];
-freqsAll = [];
-for iExportPath = 1:numel(exportPaths)
-    load(exportPaths{iExportPath} , 'freqs' , 'ifreqs','maxCount');
-    ifreqsMovie = freqtoexcel(ifreqs ,freqs, maxCount, xlsxPath,...
-        iExportPath, exportPaths{iExportPath});
-    iFreqsAll = [iFreqsAll; ifreqsMovie];
-    freqsAll = [freqsAll; cell2mat(freqs)'];
-    disp(['Saving data to ' xlsxPath ' ... '])
-end
-
-writetable(table(iFreqsAll) , xlsxPath ,'Sheet',...
-    iExportPath+1,  'Range' , 'A2' , 'WriteVariableNames' , false);
-writetable(table({'Inst. Freqs (All Files)'}) ,xlsxPath ,...
-    'Sheet', iExportPath+1, 'Range' , 'A1' , 'WriteVariableNames' , false);
-
-writetable(table(freqsAll) , xlsxPath ,'Sheet',...
-    iExportPath+1,  'Range' , 'C2' , 'WriteVariableNames' , false);
-writetable(table({'Frequencies (All Files)'}) ,xlsxPath ,...
-    'Sheet', iExportPath+1, 'Range' , 'C1' , 'WriteVariableNames' , false);
+excelPath = [excelDir excelName];
+freqtoexcel(ifreqsFilePaths, excelPath);
 
 
 % --- Executes on selection change in source_listbox.
@@ -177,7 +159,8 @@ if strcmp(selectedString , 'Recursive')
     if(baseDir == 0)
         return
     end
-    ifreqFilePaths = recursdir(baseDir , '^ifreqs.*.mat$');
+handles.baseDir = baseDir;
+ifreqsFilePaths = recursdir(baseDir , '^ifreqs.*.mat$');
    
 elseif strcmp(selectedString , 'Multi-select')
     filesnfolders = uipickfiles('REFilter' ,'^ifreqs.*.mat$');
@@ -185,19 +168,19 @@ elseif strcmp(selectedString , 'Multi-select')
         return
     end
     
-    ifreqFilePaths={};
+    ifreqsFilePaths={};
     for fnf = 1:numel(filesnfolders)
         if isdir(filesnfolders{fnf})
-            ifreqFilePaths = [ifreqFilePaths recursdir(filesnfolders{fnf} , '^ifreqs.*.mat$')];
+            ifreqsFilePaths = [ifreqsFilePaths recursdir(filesnfolders{fnf} , '^ifreqs.*.mat$')];
         else
-            ifreqFilePaths = [ifreqFilePaths filesnfolders{fnf}];
+            ifreqsFilePaths = [ifreqsFilePaths filesnfolders{fnf}];
         end
     end
 else
     error(['Radio button reading error due to ambiguous radio button string value:' selectedString])
 end
 
-set(handles.source_listbox , 'String' ,  ifreqFilePaths)
+set(handles.source_listbox , 'String' ,  ifreqsFilePaths)
 contents = cellstr(get(handles.source_listbox,'String'));
 if ~isempty(contents)
     handles.sourceIndex = 1;
@@ -205,7 +188,7 @@ if ~isempty(contents)
 end
 guidata(hObject, handles);
 
-% ********** UNUSED GUIDE FUNCTIONS ********** %
+% ==================== UNUSED GUIDE FUNCTIONS ==================== %
 % --- Outputs from this function are returned to the command line.
 function varargout = freqexport_gui_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
