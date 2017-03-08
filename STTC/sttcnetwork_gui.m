@@ -165,6 +165,7 @@ defaultDir = fullfile(handles.baseDir,'..','*.xlsx');
 if isequal(excelDir,0); return; end;
 excelPath = [excelDir excelName];
 sttctoexcel(handles.baseDir,excelPath,handles.sttcMaxLagMs);
+disp('Excel export completed.');
 
 
 % ==================== PARAMETER UPDATES ===================== %
