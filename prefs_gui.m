@@ -22,7 +22,7 @@ function varargout = prefs_gui(varargin)
 
 % Edit the above text to modify the response to help prefs_gui
 
-% Last Modified by GUIDE v2.5 21-Feb-2017 15:19:15
+% Last Modified by GUIDE v2.5 13-Mar-2017 02:55:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -109,6 +109,14 @@ newDir = uigetdir('','Select a directory');
 if newDir == 0; return; end;
 set(handles.defaultDirEdit,'String',newDir);
 
+% --- Executes on button press in updatePathsButton.
+function updatePathsButton_Callback(hObject, eventdata, handles)
+% hObject    handle to updatePathsButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+baseDir = uigetdir('','Select the directory to update.');
+if baseDir == 0; return; end;
+updatefilepaths(baseDir);
 
 % ==================== UNUSED GUIDE FUNCTIONS ==================== %
 

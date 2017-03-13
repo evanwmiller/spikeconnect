@@ -1,9 +1,6 @@
 function outfiles=currentdir(baseDir,searchExpression, exclude)
-% OUTFILES = RECURSDIR(BASEDIRECTORY,SEARCHEXPRESSION)
-% Use this method to search the current folder for matches, but exclude one
-% particular file.
-% Usage: used in select_ROI_gui3 to automatically select all .tiff files
-% in the given directory that aren't the excluded file.
+% CURRENTDIR searches Searches specified folder for matches, excluding the
+% file specified by exclude.
 % Copyright 2016 The Miller Lab, UC Berkeley
 
 dirContents = dir(baseDir);
