@@ -62,7 +62,7 @@ set(handles.folderText , 'String' , handles.baseDir)
 
 spikeFilePaths = recursdir(handles.baseDir , '^spikes-.*.mat$');
 if isempty(spikeFilePaths)
-    errordlg('No files found');
+    errordlg('No files found.');
     return;
 else
     spikeFileNames = extractNames(spikeFilePaths, baseDir);
