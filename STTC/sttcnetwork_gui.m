@@ -122,7 +122,7 @@ if x > min(xLimits) && x < max(xLimits)
         x = round(x);
         y = round(y);
         if x >= y
-            plotspikes(handles.heatmapFile,y,x);
+            plotspikes(handles.heatmapFile,y,x,handles);
         end
     end
 end
