@@ -17,8 +17,9 @@ subplot(3,1,2);
 plotroispikes(spikeDataArray,roi2,frameRate, nFrame);
 
 % Plot cross correlation histogram
-subplot(3,1,3);
-plotxcorrhist(spikeDataArray,roi1,roi2, frameRate, handles);
+h = subplot(3,1,3);
+[xcorrArr, lagArr] = plotxcorrhist(spikeDataArray,roi1,roi2,frameRate, handles);
+set(h, 'ButtonDownFcn', {@expandPlot, xcorrArr, lagArr, roi1, roi2});
 
 function plotroispikes(spikeDataArray, roi, frameRate, nFrame)
 t = spikeDataArray{roi}.rasterSpikeTimes; 
@@ -38,10 +39,10 @@ set(gca,'yticklabel',[])
 title(sprintf('Spikes for ROI %d',roi));
 
 
-function plotxcorrhist(spikeDataArray,roi1,roi2, frameRate, handles)
+function [xcorrArr, lagArrMs] = plotxcorrhist(spikeDataArray,roi1,roi2, frameRate, handles)
 nFrame = numel(spikeDataArray{1}.dffs);
 xcorrMaxLagMs = handles.xcorrMaxLagMs;
-xcorrMaxLagFrame = round(handles.xcorrMaxLagMs*frameRate/1000);
+xcorrMaxLagFrame = round(xcorrMaxLagMs*frameRate/1000);
 
 spikeVec1 = times2vector(spikeDataArray{roi1}.rasterSpikeTimes, nFrame);
 spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
@@ -49,30 +50,28 @@ spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
 [xcorrArr, lagArr] = xcorr(spikeVec1, spikeVec2,xcorrMaxLagFrame);
 %convert from frames back to Ms
 lagArrMs = lagArr ./ frameRate .* 1000;
-bar(lagArrMs,xcorrArr)
-hold on;
-ylimit = round(max(xcorrArr)*1.5);
-set(gca,'XMinorTick','on','XTick',lagArrMs);
-if ylimit ~= 0
-    axis([-xcorrMaxLagMs xcorrMaxLagMs 0 ylimit]);
-else
-    axis([-xcorrMaxLagMs xcorrMaxLagMs 0 1]);
-end
+plotcorrelogram(xcorrArr, lagArrMs, roi1, roi2);
+    
+function expandPlot(~,~, xcorrArr, lagArrMs, roi1, roi2)
+figure;
+plotcorrelogram(xcorrArr, lagArrMs, roi1, roi2);
 
-%plot 4 dotted lines indicating mono lag range limits
-mlr1 = [handles.monoMinLagMs, handles.monoMinLagMs];
-mlr2 = [handles.monoMaxLagMs, handles.monoMaxLagMs];
-yline = [0,ylimit];
-offset = 0.8;
-plot(mlr1 - offset ,yline,'k--');
-plot(-mlr1 + offset,yline,'k--');
-plot(mlr2 + offset,yline,'k--');
-plot(-mlr2 - offset,yline,'k--');
+
+function plotcorrelogram(xcorrArr, lagArrMs, roi1, roi2)
+bar(lagArrMs,xcorrArr)
+
+ylimit = round(max(xcorrArr)*1.5);
+set(gca,'XTick',lagArrMs);
+if ylimit ~= 0
+    axis([lagArrMs(1) lagArrMs(end) 0 ylimit]);
+else
+    axis([lagArrMs(1) lagArrMs(end) 0 1]);
+end
 
 title(sprintf('Crosscorrelogram of ROI %d and %d',roi1,roi2));
 xlabel('Time(ms)');
 ylabel('Count');
-    
+
 
 function spikeVector = times2vector(spikeTimes, nFrame)
 spikeVector = zeros(1,nFrame);
