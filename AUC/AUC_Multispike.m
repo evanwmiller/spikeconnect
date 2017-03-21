@@ -30,23 +30,24 @@ for ff = 1:numel(stdFileNames)
     for rr = 1:numel(spikeDataArray)
         areas_ROI = [];
         t = spikeDataArray{rr}.rasterSpikeTimes;
-        t = burstaggregator(t, 2); % rearming if needed
-        [b,a] = butter(6,fc/(fs/2)); % Create a Butterworth low pass filter (gets rid of any frequency higher than fc)
+        
         trace = roiTraces{rr}; 
-        dataIn = trace';
-        dataOut = filter(b,a,dataIn); % Apply the filter to the trace
-        avgDataOut = mean(dataOut); % mean of the filtered trace
+        
+        clusters = spikeDataArray{rr}.clusters;
+        baseline = clusters{spikeDataArray{rr}.baselineClusterIndex};
+        baselineMedian = nanmedian(baseline);
+        dff = (trace-baselineMedian)/baselineMedian;
         
         figure(f1);
         plot(trace);
-        dataOut(1:30) = avgDataOut; % The low-pass filter messes up the first few frames. Set the first 30 frames to the average.
-        figure(f2);
-        plot(dataOut-avgDataOut);
         
-         SWFtrace = slidingwindowflattener(dataOut , 100); %Use sliding window filter to level the low-pass-filtered trace
-         hold on
+        figure(f2);
+        
+         SWFtrace = slidingwindowflattener(dff , 100); %Use sliding window filter to level the low-pass-filtered trace
+         
         
          h = plot(SWFtrace , 'r');
+         hold on
          pause(1)
 
          for i = 1:numel(t)
