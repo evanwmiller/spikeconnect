@@ -18,7 +18,7 @@ for iFile = 1:numel(spikeFileNames)
         figure;
         % filter trace and set first 30 frames to average (filter makes the
         % values very high)
-        trace = sf.roiTraces{iRoi};
+        trace = sf.bkgSubtractedTraces{iRoi};
 %         filterTrace = filter(b,a,trace);
 %         filterTrace(1:30) = mean(filterTrace(30:end));
         filterTrace = trace;
@@ -28,7 +28,7 @@ for iFile = 1:numel(spikeFileNames)
         baseline = clusters{sf.spikeDataArray{iRoi}.baselineClusterIndex};
         baselineMedian = nanmedian(baseline);
         dff = (trace-baselineMedian)/baselineMedian;
-        dff(dff<0.007) = 0;
+        dff(dff<0.01) = 0;
         
         %plot trace
         subplot(2,1,1);
