@@ -84,9 +84,9 @@ for iFile = 1:numel(fileNames)
     wt(1:size(sttcArr,2), excelPath, groupName, 2, currCol+1);
     wt((1:size(sttcArr,2))', excelPath, groupName, 3, currCol);
     
-    %write sttcArr
+    %write sttcArr excluding diagonal
     for iCol = 1:size(sttcArr,2)
-        wt(sttcArr(1:iCol,iCol), excelPath, groupName, 3, currCol+iCol);
+        wt(sttcArr(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
     end
     
     currRow = 5+size(sttcArr,1);
@@ -106,9 +106,9 @@ if numel(fileNames) > 1
     wt(1:size(sttcMean,2), excelPath, groupName, 2, currCol+1);
     wt((1:size(sttcMean,2))', excelPath, groupName, 3, currCol);
     
-    %write sttcMean
+    %write sttcMean excluding diagonal
     for iCol = 1:size(sttcMean,2)
-        wt(sttcMean(1:iCol,iCol), excelPath, groupName, 3, currCol+iCol);
+        wt(sttcMean(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
     end
     
     currRow = 5+size(sttcMean,1);
@@ -132,10 +132,10 @@ writetable(table(content), file, 'Sheet',sheet,'Range',range,'WriteVariableNames
 
 function column = arr2column(arr)
 % ARR2COLUMN Converts a nxn matrix into a n*(n+1)/2 x 1 column vector using
-% the upper triangular portion of the array. 
+% the upper triangular portion of the array excluding the diagonal.
 column = [];
 for col = 1:size(arr,2)
-    column = vertcat(column,arr(1:col,col));
+    column = vertcat(column,arr(1:col-1,col));
 end
 
 
