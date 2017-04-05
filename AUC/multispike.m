@@ -16,19 +16,14 @@ end
 
 function nextIndex = findnextzero(arr,index)
 nextIndex = index;
-while nextIndex < numel(arr) && arr(nextIndex) ~= 0
+%if it hits the end, no need to check since that will be the default.
+while nextIndex < numel(arr) - 1 && arr(nextIndex) ~= 0
     nextIndex = nextIndex + 1;
-end
-if nextIndex == numel(arr)
-    nextIndex = nextIndex - 1;
 end
 
 function prevIndex = findprevzero(arr,index)
 prevIndex = index;
-while prevIndex > 0 && arr(prevIndex) ~= 0 
+while prevIndex > 1 && arr(prevIndex) ~= 0 
     prevIndex = prevIndex - 1;
-end
-if prevIndex == 0
-    prevIndex = 1;
 end
 
