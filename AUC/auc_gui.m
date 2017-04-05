@@ -1,12 +1,17 @@
-function varargout = AUC_gui(varargin)
-% AUC_GUI Creates a GUI for calculating the area under the curve for 
+function varargout = auc_gui(varargin)
+% AUC_GUI Creates a GUI for calculating the area under the curve for spike
+% trains using two different methods: multispike and whole trace integral.
+%   The user should select a folder that has been processed using SpikeNet.
+%   The program will then find all relevant data files in this directory
+%   and calculate the area under the curve for them, after which the
+%   results can be viewed using the GUI.
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @AUC_gui_OpeningFcn, ...
-                   'gui_OutputFcn',  @AUC_gui_OutputFcn, ...
+                   'gui_OpeningFcn', @auc_gui_OpeningFcn, ...
+                   'gui_OutputFcn',  @auc_gui_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -21,26 +26,197 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before AUC_gui is made visible.
-function AUC_gui_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before auc_gui is made visible.
+function auc_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to AUC_gui (see VARARGIN)
+% varargin   command line arguments to auc_gui (see VARARGIN)
 
-% Choose default command line output for AUC_gui
+% Choose default command line output for auc_gui
 handles.output = hObject;
+
+movegui(gcf,'center');
+
+% DEFAULT VALUES FOR PARAMETERS
+handles.selectedRoi = 1;
+handles.selectedFile = 0;
+
+spikeDataFiles = get(handles.fileListbox,'String');
+% if the window is already open, get the current values instead
+if iscell(spikeDataFiles)
+    handles.selectedFile = get(handles.fileListbox,'Value');
+    handles.selectedRoi = get(handles.roiSlider,'Value');
+end
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes AUC_gui wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% ==================== BUTTON PRESSES ==================== %
+% --- Executes on button press in browseButton.
+function browseButton_Callback(hObject, eventdata, handles)
+% hObject    handle to browseButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+baseDir = uigetdir('', 'Select a folder');
+if baseDir == 0; return; end;
+handles.baseDir = baseDir;
+
+set(handles.folderText , 'String' , handles.baseDir)
+
+spikeFilePaths = recursdir(handles.baseDir , '^spikes-.*.mat$');
+if isempty(spikeFilePaths)
+    errordlg('No files found.');
+    return;
+else
+    spikeFileNames = extractnames(spikeFilePaths, baseDir);
+    set(handles.fileListbox , 'String' , spikeFileNames);
+    
+    % make it multiselect initially to allow for no default value
+    set(handles.fileListbox, 'min', 0, 'max', 2);
+    set(handles.fileListbox, 'Value',[]);
+    handles.selectedFile = 0;
+end
+handles.spikeFilePaths = spikeFilePaths;
+guidata(hObject, handles);
+calculateauc(handles);
 
 
+% --- Executes on button press in exportButton.
+function exportButton_Callback(hObject, eventdata, h)
+% hObject    handle to exportButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% h    structure with handles and user data (see GUIDATA)
+if ~isfield(h,'spikeFilePaths'); return; end;
+defaultDir = fullfile(h.baseDir,'..','*.xlsx');
+[excelName, excelDir] = uiputfile(defaultDir, 'Specify Excel File Path');
+if isequal(excelDir,0); return; end;
+excelPath = [excelDir excelName];
+auctoexcel(h.spikeFilePaths,excelPath, h.aucValues);
+disp('Excel export completed.');
+
+
+% ==================== PARAMETER UPDATES ==================== %
+% --- Executes on selection change in fileListbox.
+function fileListbox_Callback(hObject, eventdata, handles)
+% hObject    handle to fileListbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.fileListbox, 'min', 0, 'max', 1);
+handles.selectedFile = get(hObject,'Value');
+nRoi = handles.numRois{handles.selectedFile};
+set(handles.roiSlider,'Min',1,'Max',nRoi);
+set(handles.roiSlider,'Value',1);
+set(handles.roiSlider, 'SliderStep', [1/(nRoi-1) , 1/(nRoi-1) ]);
+
+uicontrol(handles.roiSlider);
+handles.selectedRoi = 1;
+set(handles.roiText,'String',sprintf('ROI %d',1));
+guidata(hObject, handles);
+updateplots(handles);
+% Hints: contents = cellstr(get(hObject,'String')) returns fileListbox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from fileListbox
+
+% --- Executes on slider movement.
+function roiSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to roiSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.selectedRoi = round(get(hObject,'Value'));
+%make sure it's an integer value
+set(hObject,'Value',handles.selectedRoi);
+set(handles.roiText,'String',sprintf('ROI %d',handles.selectedRoi));
+guidata(hObject, handles);
+updateplots(handles);
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% ==================== UTILITY FUNCTIONS ==================== %
+function fileNames = extractnames(filePaths,baseDir)
+%EXTRACTNAMES Removes the folder portion from a cell array of file paths.
+fileNames = cell(size(filePaths));
+for i = 1:numel(filePaths)
+    fileNames{i} = strrep(filePaths{i},baseDir,'');
+end
+
+function calculateauc(handles)
+busy = busydlg('Please wait...');
+for iFile = 1:numel(handles.spikeFilePaths)
+    spikeFile = handles.spikeFilePaths{iFile};
+    sf = load(spikeFile);
+    nRoi = numel(sf.spikeDataArray);
+    handles.numRois{iFile} = nRoi;
+    handles.frame2ms{iFile} = 1000/sf.frameRate;
+    for iRoi = 1:nRoi
+        trace = sf.bkgSubtractedTraces{iRoi};
+        spikeData = sf.spikeDataArray{iRoi};
+
+        dff = calcdff(trace,spikeData);
+        [multiAuc, multiDff, areas] = multispike(dff,spikeData.rasterSpikeTimes);
+        [wholeAuc, wholeDff] = wholetrace(dff);
+        
+        auc = [multiAuc,wholeAuc]*handles.frame2ms{iFile};
+        handles.aucValues{iFile}{iRoi} = auc;
+        handles.rawDffs{iFile}{iRoi} = dff;
+        handles.multiDffs{iFile}{iRoi} = multiDff;
+        handles.multiAreas{iFile}{iRoi} = areas;
+        handles.wholeDffs{iFile}{iRoi} = wholeDff;
+    end
+end
+delete(busy);
+guidata(gcf,handles);
+
+function dff = calcdff(trace,spikeData)
+clusters = spikeData.clusters;
+baseline = clusters{spikeData.baselineClusterIndex};
+baselineMedian = nanmedian(baseline);
+dff = (trace-baselineMedian)/baselineMedian;
+
+
+function updateplots(handles)
+file = handles.selectedFile;
+roi = handles.selectedRoi;
+frame2s = handles.frame2ms{file}/1000;
+rawDff = handles.rawDffs{file}{roi};
+multiDff = handles.multiDffs{file}{roi};
+multiArea = handles.multiAreas{file}{roi};
+wholeDff = handles.wholeDffs{file}{roi};
+auc = handles.aucValues{file}{roi};
+aucString = sprintf('Multi-spike: %.2f ms \nWhole Trace: %.2f ms', auc(1),auc(2));
+set(handles.aucText,'String', aucString);
+
+x = (1:numel(rawDff)) .* frame2s;
+axes(handles.traceAxes);
+plot(x,rawDff);
+xlabel('s');
+title('dff');
+
+axes(handles.multispikeAxes);
+orig = plot(x,rawDff);
+orig.Color(4) = 0.1; % set opacity
+hold on;
+plot(x,multiDff);
+for i = 1:size(multiArea,1)
+    %area bounds
+    l = multiArea(i,1);
+    r = multiArea(i,2);
+    xrange = (l:r) .* frame2s;
+    area(xrange, multiDff(l:r),'FaceColor','g','EdgeColor','g');
+end
+hold off;
+xlabel('s');
+title('Multi-spike');
+
+axes(handles.wholetraceAxes);
+area(x,wholeDff,'FaceColor','b','EdgeColor','b');
+xlabel('s');
+title('Whole Trace');
+
+% ==================== UNUSED GUIDE FUNCTIONS ==================== %
 % --- Outputs from this function are returned to the command line.
-function varargout = AUC_gui_OutputFcn(hObject, eventdata, handles) 
+function varargout = auc_gui_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -50,44 +226,9 @@ function varargout = AUC_gui_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in exportButton.
-function exportButton_Callback(hObject, eventdata, handles)
-% hObject    handle to exportButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in multispikeCheck.
-function multispikeCheck_Callback(hObject, eventdata, handles)
-% hObject    handle to multispikeCheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of multispikeCheck
-
-
-% --- Executes on button press in wholetraceCheck.
-function wholetraceCheck_Callback(hObject, eventdata, handles)
-% hObject    handle to wholetraceCheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of wholetraceCheck
-
-
-% --- Executes on selection change in movieListbox.
-function movieListbox_Callback(hObject, eventdata, handles)
-% hObject    handle to movieListbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns movieListbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from movieListbox
-
-
 % --- Executes during object creation, after setting all properties.
-function movieListbox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to movieListbox (see GCBO)
+function fileListbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fileListbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -96,16 +237,6 @@ function movieListbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-% --- Executes on slider movement.
-function roiSlider_Callback(hObject, eventdata, handles)
-% hObject    handle to roiSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
 
 % --- Executes during object creation, after setting all properties.
@@ -118,10 +249,3 @@ function roiSlider_CreateFcn(hObject, eventdata, handles)
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
-
-
-% --- Executes on button press in selectDirButton.
-function selectDirButton_Callback(hObject, eventdata, handles)
-% hObject    handle to selectDirButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)

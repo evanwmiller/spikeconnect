@@ -17,7 +17,4 @@ function lbtrace = slidingwindowflattener ( trace , window_size)
 
     lbtrace(lbtrace < 0) = 0;
 
-    
-
-
 end

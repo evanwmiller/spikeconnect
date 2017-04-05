@@ -65,7 +65,7 @@ if isempty(spikeFilePaths)
     errordlg('No files found.');
     return;
 else
-    spikeFileNames = extractNames(spikeFilePaths, baseDir);
+    spikeFileNames = extractnames(spikeFilePaths, baseDir);
     set(handles.fileListbox , 'String' , spikeFileNames);
     set(handles.fileListbox, 'Value', 1);
     handles.selectedFile = [handles.baseDir filesep spikeFileNames{1}];
@@ -233,7 +233,7 @@ guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of splitLagCheck
 
 % ==================== UTILITY FUNCTIONS ==================== %
-function fileNames = extractNames(filePaths,baseDir)
+function fileNames = extractnames(filePaths,baseDir)
 %EXTRACTNAMES Removes the folder portion from a cell array of file paths.
 fileNames = cell(size(filePaths));
 for i = 1:numel(filePaths)
