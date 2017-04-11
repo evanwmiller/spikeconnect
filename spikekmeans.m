@@ -28,6 +28,8 @@ function spikeData = spikekmeans(traceFeatures, roiTraceIn, K)
     spikes = clusters{spikesClusterIndex};
     dff = (spikes - baseline)/baseline;
     rasterSpikeTimes = find(~isnan(dff));
+    
+    dffTrace = (roiTrace-baseline)/baseline;
         
     baseline_cluster = clusters{baselineClusterIndex};
     baselineDff = (baseline_cluster - baseline)/baseline;
@@ -39,6 +41,7 @@ function spikeData = spikekmeans(traceFeatures, roiTraceIn, K)
                    'baselineClusterIndex', baselineClusterIndex, ...
                    'rasterSpikeTimes', rasterSpikeTimes, ...
                    'dffs',  dff , ...
-                   'dffSnr',   dffSnr);
+                   'dffSnr',   dffSnr , ...
+                   'dffTrace', dffTrace);
 end
 
