@@ -96,6 +96,15 @@ excelPath = [excelDir excelName];
 auctoexcel(h.spikeFilePaths,excelPath, h.aucValues);
 disp('Excel export completed.');
 
+[~,fileName,~] = fileparts(excelName);
+matPath = [excelDir fileName '.mat'];
+aucValues = h.aucValues;
+spikeAuc = h.spikeAuc;
+fileNames = h.spikeFilePaths;
+save(matPath, 'fileNames','aucValues', 'spikeAuc');
+disp(['Saved AUC values and spike areas to' matPath]);
+
+
 
 % ==================== PARAMETER UPDATES ==================== %
 % --- Executes on selection change in fileListbox.
@@ -154,13 +163,13 @@ for iFile = 1:numel(handles.spikeFilePaths)
         spikeData = sf.spikeDataArray{iRoi};
 
         dff = calcdff(trace,spikeData);
-        [multiAuc, multiDff, areas] = multispike(dff,spikeData.rasterSpikeTimes);
+        [multiAvg,multiSum,multiArr,areas] = multispike(dff,spikeData.rasterSpikeTimes);
         [wholeAuc, wholeDff] = wholetrace(dff);
         
-        auc = [multiAuc,wholeAuc]*handles.frame2ms{iFile};
+        auc = [multiAvg,multiSum,wholeAuc]*handles.frame2ms{iFile};
+        handles.spikeAuc{iFile}{iRoi} = multiArr;
         handles.aucValues{iFile}{iRoi} = auc;
         handles.rawDffs{iFile}{iRoi} = dff;
-        handles.multiDffs{iFile}{iRoi} = multiDff;
         handles.multiAreas{iFile}{iRoi} = areas;
         handles.wholeDffs{iFile}{iRoi} = wholeDff;
     end
@@ -180,11 +189,11 @@ file = handles.selectedFile;
 roi = handles.selectedRoi;
 frame2s = handles.frame2ms{file}/1000;
 rawDff = handles.rawDffs{file}{roi};
-multiDff = handles.multiDffs{file}{roi};
 multiArea = handles.multiAreas{file}{roi};
 wholeDff = handles.wholeDffs{file}{roi};
 auc = handles.aucValues{file}{roi};
-aucString = sprintf('Multi-spike: %.2f ms \nWhole Trace: %.2f ms', auc(1),auc(2));
+aucString = sprintf(['Multi-spike Avg: %.2f ms \nMulti-spike Sum: %.2f'...
+    'ms \nWhole Trace: %.2f ms'], auc(1),auc(2),auc(3));
 set(handles.aucText,'String', aucString);
 
 x = (1:numel(rawDff)) .* frame2s;
@@ -194,16 +203,14 @@ xlabel('s');
 title('dff');
 
 axes(handles.multispikeAxes);
-orig = plot(x,rawDff);
-orig.Color(4) = 0.1; % set opacity
+plot(x,wholeDff);
 hold on;
-plot(x,multiDff);
 for i = 1:size(multiArea,1)
     %area bounds
     l = multiArea(i,1);
     r = multiArea(i,2);
     xrange = (l:r) .* frame2s;
-    area(xrange, multiDff(l:r),'FaceColor','g','EdgeColor','g');
+    area(xrange, wholeDff(l:r),'FaceColor','g','EdgeColor','g');
 end
 hold off;
 xlabel('s');
