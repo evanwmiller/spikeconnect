@@ -203,14 +203,14 @@ xlabel('s');
 title('dff');
 
 axes(handles.multispikeAxes);
-plot(x,wholeDff);
+plot(x,rawDff);
 hold on;
 for i = 1:size(multiArea,1)
     %area bounds
     l = multiArea(i,1);
     r = multiArea(i,2);
     xrange = (l:r) .* frame2s;
-    area(xrange, wholeDff(l:r),'FaceColor','g','EdgeColor','g');
+    area(xrange, rawDff(l:r),'FaceColor','g','EdgeColor','g');
 end
 hold off;
 xlabel('s');

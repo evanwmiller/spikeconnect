@@ -12,7 +12,7 @@ for i = 1:nSpike
     prev = findprevzero(adjDff,t);
     next = findnextzero(adjDff,t);
     areas(i,:) = [prev,next];
-    aucArr(i) = wholetrace(dff,prev,next);
+    aucArr(i) = trapz(dff(prev:next));
     aucSum = aucSum + aucArr(i);
 end
 if nSpike == 0
