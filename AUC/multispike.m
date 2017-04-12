@@ -1,7 +1,7 @@
-function [aucAvg,aucSum,aucArr,areas] = multispike(dff,spikeTimes)
+function [aucAvg,aucSum,aucArr,areas] = multispike(dff,spikeTimes, frameRate)
 %MULTISPIKE Calculates the integral of just the spikes from a spike train
 %by calculating the integral on the flattened trace. Returns the integral
-%value (auc) and the areas used to calculate the integral.
+%value (auc) and the areas used to calculate the integral. 
 adjDff = slidingwindowflattener(dff,100);
 areas = zeros(numel(spikeTimes),2);
 aucArr = zeros(size(spikeTimes));
@@ -20,6 +20,11 @@ if nSpike == 0
 else
     aucAvg = aucSum/nSpike;
 end
+frame2ms = 1000/frameRate;
+%convert from frames to ms
+aucAvg = aucAvg * frame2ms;
+aucSum = aucSum * frame2ms;
+aucArr = aucArr .* frame2ms;
 
 function nextIndex = findnextzero(arr,index)
 nextIndex = index;

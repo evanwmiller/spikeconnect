@@ -98,10 +98,10 @@ disp('Excel export completed.');
 
 [~,fileName,~] = fileparts(excelName);
 matPath = [excelDir fileName '.mat'];
-aucValues = h.aucValues;
-spikeAuc = h.spikeAuc;
+aucValuesMs = h.aucValues;
+spikeAucMs = h.spikeAuc;
 fileNames = h.spikeFilePaths;
-save(matPath, 'fileNames','aucValues', 'spikeAuc');
+save(matPath, 'fileNames','aucValuesMs', 'spikeAucMs');
 disp(['Saved AUC values and spike areas to' matPath]);
 
 
@@ -157,16 +157,16 @@ for iFile = 1:numel(handles.spikeFilePaths)
     sf = load(spikeFile);
     nRoi = numel(sf.spikeDataArray);
     handles.numRois{iFile} = nRoi;
-    handles.frame2ms{iFile} = 1000/sf.frameRate;
+    handles.frame2s{iFile} = 1/sf.frameRate;
     for iRoi = 1:nRoi
         trace = sf.bkgSubtractedTraces{iRoi};
         spikeData = sf.spikeDataArray{iRoi};
 
         dff = calcdff(trace,spikeData);
-        [multiAvg,multiSum,multiArr,areas] = multispike(dff,spikeData.rasterSpikeTimes);
-        [wholeAuc, wholeDff] = wholetrace(dff);
+        [multiAvg,multiSum,multiArr,areas] = multispike(dff,spikeData.rasterSpikeTimes, sf.frameRate);
+        [wholeAuc, wholeDff] = wholetrace(dff, sf.frameRate);
         
-        auc = [multiAvg,multiSum,wholeAuc]*handles.frame2ms{iFile};
+        auc = [multiAvg,multiSum,wholeAuc];
         handles.spikeAuc{iFile}{iRoi} = multiArr;
         handles.aucValues{iFile}{iRoi} = auc;
         handles.rawDffs{iFile}{iRoi} = dff;
@@ -187,7 +187,7 @@ dff = (trace-baselineMedian)/baselineMedian;
 function updateplots(handles)
 file = handles.selectedFile;
 roi = handles.selectedRoi;
-frame2s = handles.frame2ms{file}/1000;
+frame2s = handles.frame2s{file};
 rawDff = handles.rawDffs{file}{roi};
 multiArea = handles.multiAreas{file}{roi};
 wholeDff = handles.wholeDffs{file}{roi};
