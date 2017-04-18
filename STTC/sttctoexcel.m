@@ -18,61 +18,37 @@ function sttctoexcel(baseDir, excelPath, sttcMaxLagMs)
 
 spikeFileStruct = findgroups(baseDir);
 groups = sort(fieldnames(spikeFileStruct));
-means = [];
+composites = [];
 for iGroup = 1:numel(groups)
     groupName = groups{iGroup};
     fileNames = spikeFileStruct.(groupName);
     groupMean = writegrouptoexcel(excelPath, groupName, fileNames, sttcMaxLagMs);
-    means = vertcat(means,groupMean);
+    composites = vertcat(composites,groupMean);
 end
-writemeanstoexcel(excelPath, means);
+wt({'Composite Aggregate'}, excelPath, 'Aggregate',1,1);
+wt(composites, excelPath,'Aggregate',2,1);
+
 if ispc
     RemoveSheet123(excelPath);
 end
 
 
-function fileStruct = findgroups(baseDir)
-% FINDGROUPS Uses recursive search starting from baseDir to find 
-% spikes-*.mat files and then groups them by the parent directory so that 
-% movies of the same area will be in the same field of fileStruct. The 
-% field names in fileStruct are the parent directories, with spaces
-% replaced by underscores.
-
-fileStruct = struct;
-% Find all spike files in this directory.
-fileArr = recursdir(baseDir , '^spikes-.*.mat$');
-
-% Group spike files by their parent directory
-for iFile = 1:numel(fileArr)
-    [dir,~,~] = fileparts(fileArr{iFile});
-    dirSplit = strsplit(dir,filesep);
-    folderName = dirSplit{end};
-    folderName = strrep(folderName,' ','_');
-    if isfield(fileStruct,folderName)
-        currentGroup = fileStruct.(folderName);
-        currentGroup{end+1} = fileArr{iFile};
-        fileStruct.(folderName) = currentGroup;
-    else
-        fileStruct.(folderName) = {fileArr{iFile}};
-    end
-end
-
-
-function sttcMeanCol = writegrouptoexcel(excelPath, groupName, fileNames, lag)
+function compositeCol = writegrouptoexcel(excelPath, groupName, fileNames, lag)
 % WRITEGROUPTOEXCEL Calculates the STTC array for a set of movies given by
 % fileNames and writes it to a tab specified by groupName in the Excel file
 % specified by excelPath. It writes the STTC array for each movie as a
 % grid, then as a column underneath it. In addition to the files, it will
 % calculates the groupMean, which is outputted.
 currCol = 1;
-
+[groupSttcArr, fileSttcArrs] = calcsttcarr(fileNames,lag);
 for iFile = 1:numel(fileNames)
     filePath = fileNames{iFile};
+    
     %label movie
     [~,label,~] = fileparts(filePath);
     wt({label}, excelPath, groupName, 1, currCol);
     
-    sttcArr = calcsttcarr(filePath, lag);
+    sttcArr = fileSttcArrs{iFile};
     if iFile == 1
         sttcSum = sttcArr;
     else
@@ -97,15 +73,35 @@ for iFile = 1:numel(fileNames)
     currCol = currCol + 3 + size(sttcArr,2);
 end
 
-%write mean if more than one movie
+%write composite and mean if more than one movie
 if numel(fileNames) > 1
+    wt({[groupName 'composite']}, excelPath, groupName, 1, currCol);
+    %label ROI row/columns for heatmap
+    wt({'ROI'}, excelPath, groupName, 2, currCol);
+    wt(1:size(groupSttcArr,2), excelPath, groupName, 2, currCol+1);
+    wt((1:size(groupSttcArr,2))', excelPath, groupName, 3, currCol);
+    
+    %write sttcMean excluding diagonal
+    for iCol = 1:size(groupSttcArr,2)
+        wt(groupSttcArr(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
+    end
+    
+    currRow = 5+size(groupSttcArr,1);
+    
+    %write sttc as column
+    compositeCol = arr2column(groupSttcArr);
+    wt(compositeCol, excelPath, groupName, currRow, currCol);
+    
+    %move over to right
+    currCol = currCol + 3 + size(sttcArr,2);
     sttcMean = sttcSum / numel(fileNames);
+    
     wt({'Mean'}, excelPath, groupName, 1, currCol);
     %label ROI row/columns for heatmap
     wt({'ROI'}, excelPath, groupName, 2, currCol);
     wt(1:size(sttcMean,2), excelPath, groupName, 2, currCol+1);
     wt((1:size(sttcMean,2))', excelPath, groupName, 3, currCol);
-    
+   
     %write sttcMean excluding diagonal
     for iCol = 1:size(sttcMean,2)
         wt(sttcMean(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
@@ -116,12 +112,6 @@ if numel(fileNames) > 1
     sttcMeanCol = arr2column(sttcMean);
     wt(sttcMeanCol, excelPath, groupName, currRow, currCol);
 end
-
-
-function writemeanstoexcel(excelPath, means)
-% WRITEMEANSTOEXCEL Given an array of means, writes it as a column in a new
-% Excel tab in the file specified by excelPath. 
-wt(means, excelPath,'Aggregate',1,1);
 
 
 function wt(content,file,sheet,row, col)

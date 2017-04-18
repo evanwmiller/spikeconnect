@@ -34,14 +34,6 @@ handles.sttcMaxLagMs = str2double(get(handles.sttcMaxLagEdit,'String'));
 handles.xcorrMaxLagMs = str2double(get(handles.xcorrMaxLagEdit,'String'));
 handles.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
-handles.splitLag = get(handles.splitLagCheck,'Value');
-
-spikeDataFiles = get(handles.fileListbox,'String');
-if iscell(spikeDataFiles)
-    handles.selectedFile = spikeDataFiles{get(handles.fileListbox,'Value')};
-else
-    handles.selectedFile = '';
-end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -60,16 +52,16 @@ handles.baseDir = baseDir;
 
 set(handles.folderText , 'String' , handles.baseDir)
 
-spikeFilePaths = recursdir(handles.baseDir , '^spikes-.*.mat$');
-if isempty(spikeFilePaths)
+spikeFileStruct = findgroups(handles.baseDir);
+if isempty(fieldnames(spikeFileStruct))
     errordlg('No files found.');
     return;
 else
-    spikeFileNames = extractnames(spikeFilePaths, baseDir);
+    spikeFileNames = extractnames(spikeFileStruct, baseDir);
     set(handles.fileListbox , 'String' , spikeFileNames);
     set(handles.fileListbox, 'Value', 1);
-    handles.selectedFile = [handles.baseDir filesep spikeFileNames{1}];
 end
+handles.spikeFileStruct = spikeFileStruct;
 
 guidata(hObject, handles);
 
@@ -79,13 +71,14 @@ function heatmapButton_Callback(hObject, eventdata, handles)
 % hObject    handle to heatmapButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isequal(handles.selectedFile,'')
-    errordlg('Please select a file first.');
+if ~isfield(handles,'spikeFileStruct')
+    errordlg('Please select a folder first.');
     return;
 end
 
 % Embeds the heatmap into the figure
-sttcArr = calcsttcarr(handles.selectedFile, handles.sttcMaxLagMs);
+[handles.fileGroup,handles.selection] = getfilegroup(handles);
+sttcArr = calcsttcarr(handles.fileGroup, handles.sttcMaxLagMs);
 axes(handles.figAxes);
 colormap([jet;[1,1,1]]); 
 image(sttcArr , 'CDataMapping','scaled');
@@ -95,11 +88,9 @@ axis square;
 % Color bar is set to 0 to 1.05. STTC range is 0 to 1, and the bottom left
 % triangle is set to 1.05, so it'll show up as white.
 caxis([0 1.05]);
+titleText = strrep(handles.selection,'_',' ');
+title(titleText);
 
-[~,fileName,~] = fileparts(handles.selectedFile);
-title(fileName(8:end));
-
-handles.heatmapFile = handles.selectedFile;
 set(gcf, 'WindowButtonDownFcn', @heatmapclick);
 
 guidata(hObject, handles);
@@ -122,7 +113,7 @@ if x > min(xLimits) && x < max(xLimits)
         x = round(x);
         y = round(y);
         if x >= y
-            plotspikes(handles.heatmapFile,y,x,handles);
+            plotdetails(handles,y,x);
         end
     end
 end
@@ -132,11 +123,11 @@ function seeRoiButton_Callback(hObject, eventdata, handles)
 % hObject    handle to seeRoiButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isequal(handles.selectedFile,'')
-    errordlg('Please select a file first.');
+if ~isfield(handles,'spikeFileStruct')
+    errordlg('Please select a folder first.');
     return;
 end
-plotrois(handles.selectedFile);
+plotrois(handles.fileGroup{1});
 
 
 % --- Executes on button press in networkButton.
@@ -144,45 +135,34 @@ function networkButton_Callback(hObject, eventdata, handles)
 % hObject    handle to networkButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isequal(handles.selectedFile,'')
-    errordlg('Please select a file first.');
+if ~isfield(handles,'spikeFileStruct')
+    errordlg('Please select a folder first.');
     return;
 end
-plotnetwork(handles.selectedFile, handles.xcorrMaxLagMs, ...
-            handles.monoMinLagMs, handles.monoMaxLagMs);
+disp('Currently unsupported.');
+% plotnetwork(handles.selectedFile, handles.xcorrMaxLagMs, ...
+%             handles.monoMinLagMs, handles.monoMaxLagMs);
 
 % --- Executes on button press in exportExcelButton.
 function exportExcelButton_Callback(hObject, eventdata, handles)
 % hObject    handle to exportExcelButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if isequal(handles.selectedFile,'')
+if ~isfield(handles,'spikeFileStruct')
     errordlg('Please select a folder first.');
     return;
 end
+
 defaultDir = fullfile(handles.baseDir,'..','*.xlsx');
 [excelName, excelDir] = uiputfile(defaultDir, 'Specify Excel File Path');
 if isequal(excelDir,0); return; end;
 excelPath = [excelDir excelName];
+disp('Please wait...');
 sttctoexcel(handles.baseDir,excelPath,handles.sttcMaxLagMs);
 disp('Excel export completed.');
 
 
 % ==================== PARAMETER UPDATES ===================== %
-
-% --- Executes on selection change in fileListbox.
-function fileListbox_Callback(hObject, eventdata, handles)
-% hObject    handle to fileListbox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-fileNames = get(handles.fileListbox,'String');
-index = get(hObject,'Value');
-handles.selectedFile = [handles.baseDir filesep fileNames{index}];
-guidata(hObject, handles);
-% Hints: contents = cellstr(get(hObject,'String')) returns fileListbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from fileListbox
-
-
 function sttcMaxLagEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to sttcMaxLagEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -222,22 +202,46 @@ guidata(hObject, handles);
 % Hints: get(hObject,'String') returns contents of monoMaxLagEdit as text
 %        str2double(get(hObject,'String')) returns contents of monoMaxLagEdit as a double
 
-
-% --- Executes on button press in splitLagCheck.
-function splitLagCheck_Callback(hObject, eventdata, handles)
-% hObject    handle to splitLagCheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.splitLag = get(hObject, 'Value');
-guidata(hObject, handles);
-% Hint: get(hObject,'Value') returns toggle state of splitLagCheck
-
 % ==================== UTILITY FUNCTIONS ==================== %
-function fileNames = extractnames(filePaths,baseDir)
-%EXTRACTNAMES Removes the folder portion from a cell array of file paths.
-fileNames = cell(size(filePaths));
-for i = 1:numel(filePaths)
-    fileNames{i} = strrep(filePaths{i},baseDir,'');
+
+function [fileGroup,selection] = getfilegroup(handles)
+%GETFILEGROUP Using the currently selected entry in handles.fileListbox,
+%create a cell array of the associated spike files. If a file is selected,
+%returns {file}. If a folder is selected, returns {files in folder}.
+fileList = cellstr(get(handles.fileListbox,'String'));
+selection = fileList{get(handles.fileListbox,'Value')};
+[~,~,ext] = fileparts(selection);
+% selected entry is a group
+if isempty(ext)
+    fileGroup = handles.spikeFileStruct.(selection);
+else
+    fileGroup = {[handles.baseDir selection]};
+end
+
+
+function fileNames = extractnames(fileStruct,baseDir)
+%EXTRACTNAMES Creates list of folders/files from grouped spike files.
+fileNames = {};
+fieldNames = fieldnames(fileStruct);
+for iField = 1:numel(fieldNames)
+    fieldName = fieldNames{iField};
+    fileNames{end+1} = fieldName;
+    filesInGroup = fileStruct.(fieldName);
+    for iFile = 1:numel(filesInGroup)
+        file = filesInGroup{iFile};
+        fileNames{end+1} = strrep(file,baseDir,'');
+    end
+end
+
+function plotdetails(handles, roi1, roi2)
+% Plots spikes if a file is selected. Plots crosscorrelogram if a group is
+% selected.
+[~,~,ext] = fileparts(handles.selection);
+fileGroup = getfilegroup(handles);
+if isempty(ext)
+    plotxcorr(fileGroup,roi1,roi2,handles.xcorrMaxLagMs);
+else
+    plotspikes(fileGroup{1},roi1,roi2);
 end
 
 % ==================== UNUSED GUIDE FUNCTIONS ==================== %
@@ -251,6 +255,16 @@ function varargout = sttcnetwork_gui_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
+
+% --- Executes on selection change in fileListbox.
+function fileListbox_Callback(hObject, eventdata, handles)
+% hObject    handle to fileListbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns fileListbox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from fileListbox
 
 
 % --- Executes during object creation, after setting all properties.

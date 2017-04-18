@@ -1,35 +1,64 @@
-function sttcArr = calcsttcarr(spikeFile, sttcMaxLagMs)
-%CALCSTTCARR Given a spikeDataArray, calculates the pairwise spike time
-%tiling coefficient (sttc) using CALCSTTC. Returns as 2D array. 
+function [groupSttcArr, fileSttcArrs] = calcsttcarr(spikeFileGroup, sttcMaxLagMs)
+%CALCSTTCARR Given a spikeFileGroup, calculates the pairwise spike time
+%tiling coefficient (sttc) using CALCSTTC. Returns the sttc array for the
+%group as well as for each individual file in the group.
 %   The bottom left triangle is set to be 1.05 so that it will show up 
 %   white in the heatmap.
 %
 %   Inputs:
-%       spikeFile: string of spike data file (after thresholding)
+%       spikeFileGroup: cell array of spike files w/ same ROI and framerate
 %       sttcMaxLagMs: range to use for window when calculating sttc (in ms)
 %   Outputs:
-%       sttcArr: pairwise sttc for each of the rois in the movie
-%   sttcArr = calcsttcarr(spikeDataArray, sttcMaxLagMs, nFrame)
+%       groupSttcArr: STTC array for group, combining counts in calcsttc.m
+%       fileSttcArrs: STTC array for each individual file in group
+%   [groupSttcArr, fileSttcArrs] = calcsttcarr(spikeFileGroup, sttcMaxLagMs)
 
 % Copyright 2017, The Miller Lab, UC Berkeley
 % Author: Patrick Zhang
 
-load(spikeFile,'spikeDataArray','frameRate');
+[timesArr, nFrameArr, maxLagFrame] = combine(spikeFileGroup, sttcMaxLagMs);
+nRoi = numel(timesArr);
+%initialize each sttc array to nRoi x nRoi array of 1.05
+groupSttcArr = ones(nRoi, nRoi) .* 1.05;
+fileSttcArrs = cell(1,numel(spikeFileGroup));
+for i = 1:numel(spikeFileGroup)
+    fileSttcArrs{i} = groupSttcArr;
+end
 
-nRoi = length(spikeDataArray);
-nFrame = numel(spikeDataArray{1}.dffs);
-maxLagFrame = round(sttcMaxLagMs / 1000 * frameRate,0);
-sttcArr = ones(nRoi, nRoi);
-sttcArr = sttcArr * 1.05;
 for iRoi = 1:nRoi
-    r1 = spikeDataArray{iRoi}.rasterSpikeTimes;
+    r1 = timesArr{iRoi};
     for jRoi = iRoi:nRoi
-        r2 = spikeDataArray{jRoi}.rasterSpikeTimes;
-        sttc = calcsttc(r1, r2 , maxLagFrame, nFrame);
-        %Sets negative values to be 0.
-        if sttc < 0; sttc = 0; end;
-        sttcArr(iRoi, jRoi) = sttc;          
+        r2 = timesArr{jRoi};
+        [groupSttc, fileSttcs] = calcsttc(r1, r2 , maxLagFrame, nFrameArr);
+        %Sets negative values and NaN to be 0.
+        if (groupSttc < 0) || isnan(groupSttc); groupSttc = 0; end;
+        fileSttcs(fileSttcs < 0) = 0;
+        fileSttcs(isnan(fileSttcs)) = 0;
+        %Set sttc in appropriate sttcArr
+        groupSttcArr(iRoi, jRoi) = groupSttc; 
+        for iSttc = 1:numel(fileSttcs)
+            fileSttcArrs{iSttc}(iRoi, jRoi) = fileSttcs(iSttc);
+        end
     end
 end
-sttcArr(isnan(sttcArr))=0;
+
+function [timesArr, nFrameArr, maxLagFrame] = combine(spikeFileGroup, sttcMaxLagMs)
+% COMBINE Groups the rasterSpikeTimes from each of the files in
+% spikeFileGroup. Returns the following:
+%   times: 1 x nRoi cell array, each cell contains another
+%       cell array with the raster spike times of each spikeFile
+%   numFrames: 1 x nRoi array, each entry is the number of frames for that
+%       spikeFile.
+for iSpikeFile = 1:numel(spikeFileGroup)
+    spikeFile = spikeFileGroup{iSpikeFile};
+    load(spikeFile,'spikeDataArray','frameRate');
+
+    nFrameArr{iSpikeFile} = numel(spikeDataArray{1}.dffs);
+    maxLagFrame = round(sttcMaxLagMs / 1000 * frameRate,0);
+    nRoi = length(spikeDataArray);
+    for iRoi = 1:nRoi
+        timesArr{iRoi}{iSpikeFile} = spikeDataArray{iRoi}.rasterSpikeTimes;
+    end
+end
+    
 
