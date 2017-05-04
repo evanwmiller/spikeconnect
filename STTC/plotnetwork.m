@@ -1,68 +1,44 @@
-function plotnetwork(spikeFile,xcorrLagMs, monoMinLagMs, monoMaxLagMs)
-% PLOTNETWORK Plots a network graph of the ROIs where the direction and
-% weight of the line indicates the delay between spike times.
-
-% Steps:
-% 1) For each pair of ROIs, find the delay (within the xcorr window) for 
-%    which it has the maximum crosscorrelation value.
-% 2) Then, based on the delay, it classifies it as synchronous, 
-%     monosynaptic, then disynaptic depending on whether or not 
-%     it?s in the specified monosynaptic lag range.
-% 3) Then, plots a network graph (in no particular order) or the nodes. 
-%    The weight on the line indicates the delay.
-
-load(spikeFile,'spikeDataArray','frameRate');
-
-xcorrMaxLag = ms2frame(xcorrLagMs, frameRate);
-[delayArr, xcorrArr] = calcdelay(spikeDataArray,xcorrMaxLag);
-monoMinLag = ms2frame(monoMinLagMs, frameRate);
-monoMaxLag = ms2frame(monoMaxLagMs, frameRate);
-[mono, di, sync, nRoi] = classifylag(delayArr, monoMinLag, monoMaxLag);
-plotnetworkgraph(mono,nRoi, 'Monosynaptic');
-plotnetworkgraph(di, nRoi, 'Disynaptic');
-plotnetworkgraph(sync, nRoi, 'Synchronous');
+function plotnetwork(fileGroup,xcorrLagMs, monoMinLagMs, monoMaxLagMs)
+% PLOTNETWORK Work in progress.
+ratioArr = calcratio(fileGroup, xcorrLagMs, monoMinLagMs, monoMaxLagMs);
+connectionArr = classify(ratioArr);
+plotnetworkgraph(connectionArr, size(ratioArr,1), 'Ratio based monosynaptic');
+save('ratio.mat','ratioArr');
 
 
-function [delayArr, xcorrArr] = calcdelay(spikeDataArray,xcorrMaxLag)
-nFrame = numel(spikeDataArray{1}.dffs);
-nRoi = length(spikeDataArray);
-xcorrArr = cell(nRoi, nRoi);
-delayArr = zeros(nRoi, nRoi);
+function ratioArr = calcratio(fileGroup, xcorrLagMs, monoMinLagMs, monoMaxLagMs)
+load(fileGroup{1},'roiTraces');
+nRoi = numel(roiTraces);
 
-for iRoi = 1:nRoi
-    r1 = times2vector(spikeDataArray{iRoi}.rasterSpikeTimes, nFrame);
-    for jRoi = iRoi:nRoi
-        r2 = times2vector(spikeDataArray{jRoi}.rasterSpikeTimes, nFrame);
-        [xcorrArr{iRoi,jRoi},lags] = xcorr(r1, r2 , xcorrMaxLag);
-        [~, maxIndex] = max(xcorrArr{iRoi,jRoi});
-        delayArr(iRoi,jRoi) = lags(maxIndex);
+ratioArr = nan(nRoi);
+for roi1 = 1:nRoi
+    for roi2 = (roi1+1):nRoi
+        [xcorrArr, lagArrMs] = plotxcorr(fileGroup, roi1,roi2,xcorrLagMs,false);
+        counts = bucket(xcorrArr, lagArrMs, monoMinLagMs, monoMaxLagMs);
+        ratioArr(roi1,roi2) = (counts.forward + 1)/(counts.backward + 1);
     end
 end
+dir = fileparts(fileGroup{1});
+save([dir filesep 'ratio.mat'], 'ratioArr');
 
+function counts = bucket(xcorrArr, lagArrMs, monoMinLagMs, monoMaxLagMs)
+counts.backward = sum(xcorrArr(find(lagArrMs >= -monoMaxLagMs & lagArrMs <= -monoMinLagMs)));
+counts.forward = sum(xcorrArr(find(lagArrMs >= monoMinLagMs & lagArrMs <= monoMaxLagMs)));
+counts.synch = sum(xcorrArr(find(lagArrMs > -monoMinLagMs & lagArrMs < monoMinLagMs)));
 
-function [mono, di, sync, nRoi] = classifylag(delayArr, minDelay, maxDelay)
-nRoi = size(delayArr,1);
-mono = cell(0);
-di = cell(0);
-sync = cell(0);
-for iRoi = 1:nRoi
-    for jRoi = iRoi+1:nRoi
-        absDelay = abs(delayArr(iRoi,jRoi));
-        if absDelay < minDelay
-            sync{end+1} = directional(iRoi, jRoi, delayArr(iRoi, jRoi));
-        elseif absDelay > maxDelay
-            di{end+1} = directional(iRoi, jRoi, delayArr(iRoi, jRoi));
-        else
-            mono{end+1} = directional(iRoi, jRoi, delayArr(iRoi, jRoi));
+function connectionArr = classify(ratioArr)
+connectionArr = {};
+ratioThreshold = 3;
+nRoi = size(ratioArr,1);
+for roi1 = 1:nRoi
+    for roi2 = (roi1+1):nRoi
+        ratio = ratioArr(roi1,roi2);
+        if ratio >= ratioThreshold
+            connectionArr{end+1} = [roi1,roi2, ratio];
+        elseif ratio <= -ratioThreshold
+            connectionArr{end+1} = [roi2, roi1, -ratio];
         end
     end
-end
-
-function directionalLine = directional(x,y,delay)
-if delay > 0
-    directionalLine = [x,y,delay];
-else
-    directionalLine = [y,x,-delay];
 end
 
 
@@ -86,12 +62,3 @@ p = plot(G,'Layout','force','EdgeLabel',G.Edges.Weight);
 p.MarkerSize = 10;
 p.EdgeColor = 'r';
 title(plotTitle);
-
-
-function spikeVector = times2vector(spikeTimes, nFrame)
-spikeVector = zeros(1,nFrame);
-spikeVector(spikeTimes) = 1;
-
-
-function frames = ms2frame(timeMs,frameRate)
-frames = round(timeMs/1000*frameRate,0);

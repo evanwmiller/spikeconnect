@@ -139,9 +139,9 @@ if ~isfield(handles,'spikeFileStruct')
     errordlg('Please select a folder first.');
     return;
 end
-disp('Currently unsupported.');
-% plotnetwork(handles.selectedFile, handles.xcorrMaxLagMs, ...
-%             handles.monoMinLagMs, handles.monoMaxLagMs);
+fileGroup = getfilegroup(handles);
+plotnetwork(fileGroup, handles.xcorrMaxLagMs, ...
+    handles.monoMinLagMs, handles.monoMaxLagMs);
 
 % --- Executes on button press in exportExcelButton.
 function exportExcelButton_Callback(hObject, eventdata, handles)
@@ -238,8 +238,9 @@ function plotdetails(handles, roi1, roi2)
 % selected.
 [~,~,ext] = fileparts(handles.selection);
 fileGroup = getfilegroup(handles);
-if isempty(ext)
+if isempty(ext) %selected group
     plotxcorr(fileGroup,roi1,roi2,handles.xcorrMaxLagMs);
+    plotxcorrtotal(fileGroup, handles.xcorrMaxLagMs);
 else
     plotspikes(fileGroup{1},roi1,roi2);
 end
