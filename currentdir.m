@@ -3,6 +3,10 @@ function outfiles=currentdir(baseDir,searchExpression, exclude)
 % file specified by exclude.
 % Copyright 2016 The Miller Lab, UC Berkeley
 
+if nargin < 3
+    exclude = '';
+end
+
 dirContents = dir(baseDir);
 outfiles = {};
 for i = 1:length(dirContents)

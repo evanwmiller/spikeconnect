@@ -39,224 +39,99 @@ h.output = hObject;
 movegui(gcf,'center')
 %set instructions
 instructions = sprintf(['Instructions: ' ...
-                'Browse for a top-level folder containing spikes- files. '...
-                'Use the < and > buttons to navigate left and right. The'...
-                ' >> button will skip to the next unassigned spike.' ...
-                ' Classify the indicated spike by using the number keys '...
+                'Browse for folder containing a label- file. '...
+                ' Classify the indicated ROI by using the number keys '...
                 'or by clicking on the buttons. Assignments will be saved '...
-                'periodically and when the GUI is closed.']);
+                'when the GUI is closed or when user selects a new folder.']);
 set(h.instructionsText,'String',instructions);
 
-h.currSpikeIndex = [0 0 0];
-h.currFileNum = 0;
-
+h.neuronTypes = {'DGC','Inhib','CA1','CA3'};
+h.buttons = {h.dgcButton, h.inhibButton, h.ca1Button, h.ca3Button};
+set(h.statusText,'FontSize',16,'FontWeight','Bold');
 % Update h structure
 guidata(hObject, h);
 
 
-function h = getprevspike(hObject,h)
-% GETPREVSPIKE Changes h.nextSpikeIndex to the previous spike.
-prevSpikeSet = false;
-file = h.currSpikeIndex(1);
-roi = h.currSpikeIndex(2);
-spike = h.currSpikeIndex(3);
-h = loadspikefile(hObject, h, file);
+function h = getprevroi(hObject,h)
+% GETPREVROI Return to previous ROI and update statusText.
+if h.currRoiNum > 1
+    h.currRoiNum = h.currRoiNum - 1;
+end
+status = sprintf('Select label for ROI %d',h.currRoiNum);
+set(h.statusText,'String',status);
+displaycurrentassignment(hObject,h);
 
-while ~prevSpikeSet
-    if spike > 1
-        h.nextSpikeIndex = [file roi spike-1];
-        prevSpikeSet = true;
-    elseif roi > 1
-        roi = roi - 1;
-        spike = numel(h.spikeDataArray{roi}.rasterSpikeTimes)+1;
-    elseif file > 1
-        file = file - 1;
-        h = loadspikefile(hObject, h, file);
-        roi = numel(h.spikeDataArray);
-        spike = numel(h.spikeDataArray{roi}.rasterSpikeTimes)+1;
-    else
-        %exit loop but do not change nextSpikeIndex
-        prevSpikeSet = true; 
-    end
+
+function h = getnextroi(hObject,h)
+% GETNEXTROI Advance to next ROI and update statusText.
+if h.currRoiNum < h.totalRoiNum
+    h.currRoiNum = h.currRoiNum + 1;
+end
+status = sprintf('Select label for ROI %d',h.currRoiNum);
+set(h.statusText,'String',status);
+displaycurrentassignment(hObject,h);
+
+function displaycurrentassignment(hObject,h)
+% DISPLAYCURRENTASSIGNMENT If the current ROI already has an assignment,
+% make the associated button green.
+
+assignment = find(strcmp(h.neuronTypes,h.assignments{h.currRoiNum}));
+h = resetcolors(h); %reset to gray
+if ~isempty(assignment)
+    set(h.buttons{assignment},'BackgroundColor',[0 0.8 0]);
 end
 guidata(hObject,h);
 
 
-function h = getnextspike(hObject,h)
-% GETNEXTSPIKE Changes h.nextSpikeIndex to the previous spike.
-nextSpikeSet = false;
-file = h.currSpikeIndex(1);
-roi = h.currSpikeIndex(2);
-spike = h.currSpikeIndex(3);
-h = loadspikefile(hObject, h, file);
-
-while ~nextSpikeSet
-    if spike < numel(h.spikeDataArray{roi}.rasterSpikeTimes)
-        h.nextSpikeIndex = [file roi spike+1];
-        nextSpikeSet = true;
-    elseif roi < numel(h.spikeDataArray)
-        roi = roi + 1;
-        spike = 0;
-    elseif file < h.fileNumToPath.Count
-        file = file +1;
-        h = loadspikefile(hObject, h, file);
-        roi = 1;
-        spike = 0;
-    else
-        %exit loop but do not change nextSpikeIndex
-        nextSpikeSet = true; 
-    end
-end
-guidata(hObject,h);
-
-
-function h = loadspikefile(hObject,h,fileNum)
-% LOADSPIKEFILE If the fileNum is different than what's currently
-% displayed, loads h.frameRate, h.spikeDataArray, and
-% h.dffArray of the new fileNum.
-if fileNum == h.currFileNum; return; end;
-
-relPath = h.fileNumToPath(fileNum);
-absPath = [h.baseDir relPath];
-load(absPath,'spikeDataArray','frameRate','bkgSubtractedTraces');
-h.frameRate = frameRate;
-h.spikeDataArray = spikeDataArray;
-h.dffArr = calcdff(bkgSubtractedTraces, spikeDataArray);
-h.currFileNum = fileNum;
-
-guidata(hObject,h);
-
-
-function dffArr = calcdff(traces,spikeDataArray)
-dffArr = cell(size(traces));
-for i = 1:numel(traces)
-    trace = traces{i};
-    spikeData = spikeDataArray{i};
-    clusters = spikeData.clusters;
-    baseline = clusters{spikeData.baselineClusterIndex};
-    baselineMedian = nanmedian(baseline);
-    dffArr{i} = (trace-baselineMedian)/baselineMedian;
+function h = resetcolors(h)
+% RESETCOLORS Makes the background color of the assignments buttons gray.
+for i = 1:numel(h.neuronTypes)
+    set(h.buttons{i},'BackgroundColor',[0.94 0.94 0.94]);
 end
 
 
-function displaynextspike(hObject,h)
-file = h.nextSpikeIndex(1);
-roi = h.nextSpikeIndex(2);
-spike = h.nextSpikeIndex(3);
-
-h = loadspikefile(hObject,h,file);
-if (roi ~= h.currSpikeIndex(2)) || (file ~= h.currSpikeIndex(1)) 
-    axes(h.spikeAxes);
-    hold off;
-    plot(h.dffArr{roi});
-    xlim = get(gca,'xlim');
-    axis([xlim min(h.dffArr{roi})*1.2 max(h.dffArr{roi})*1.2]);
-    hold on;
-    h.featureVectorArr = extractfeatures(h.dffArr{roi}, h.spikeDataArray{roi}, h.frameRate);
-end
-if (spike ~= h.currSpikeIndex(3)) || (roi ~= h.currSpikeIndex(2))
-    if isfield(h,'arrow'); delete(h.arrow); end;
-    axes(h.spikeAxes);
-    xlim = get(gca,'xlim');
-    spikeTime = h.spikeDataArray{roi}.rasterSpikeTimes(spike);
-    dff = h.dffArr{roi}(spikeTime);
-    
-    % increment spikeTime while the dff is going up to find the peak
-    while (spikeTime < xlim(2)) && (h.dffArr{roi}(spikeTime+1) > dff)
-        spikeTime = spikeTime + 1;
-        dff = h.dffArr{roi}(spikeTime);
-    end
-        
-    h.arrow = annotation('arrow');
-    set(h.arrow,'parent',gca);
-    startPos = [spikeTime, dff*1.05]; 
-    distance = [0 -0.00001]; %this makes the arrow point downwards
-    set(h.arrow,'position',[startPos distance]);
-    statusString = sprintf(['File %d of %d \n',...
-        'ROI %d of %d \n',...
-        'Spike %d of %d \n',...
-        '%d spikes assigned'],...
-        file, h.fileNumToPath.Count, roi, numel(h.spikeDataArray), ...
-        spike,numel(h.spikeDataArray{roi}.rasterSpikeTimes),h.totalCount);
-    set(h.statusText, 'String', statusString);
-end
-
-h.currSpikeIndex = h.nextSpikeIndex;
-
-guidata(hObject,h);
-
-
-function assigncurrentspike(hObject,h,assignment)
-% ASSIGNCURRENTSPIKE Appends the assignment to the feature vector of this
-% spike, and saves it in the cell array. Displays the next spike.
-file = h.currSpikeIndex(1);
-roi = h.currSpikeIndex(2);
-spike = h.currSpikeIndex(3);
-featureVector = h.featureVectorArr{spike};
-h.assignments{file}{roi}{spike} = [featureVector assignment];
-h.totalCount = h.totalCount + 1;
-h = getnextspike(hObject, h);
-if mod(h.totalCount,20) == 0
-    saveassignments(h);
-end
-displaynextspike(hObject, h);
-
-
-function resumefromfile(hObject,h)
-saveData = load(h.saveFile);
-
-h.nextSpikeIndex = saveData.currSpikeIndex;
-
-h.fileNumToPath = saveData.fileNumToPath;
-h.pathToFileNum = saveData.pathToFileNum;
-h.totalCount = saveData.totalCount;
-
-h.assignments = saveData.assignments;
-
-displaynextspike(hObject,h);
-
-
-function initialize(hObject,h)
-spikeFiles = recursdir(h.baseDir , '^spikes-.*.mat$');
-% remove the baseDir path
-for i = 1:numel(spikeFiles)
-    spikeFiles{i} = strrep(spikeFiles{i}, h.baseDir, '');
-end
-h.fileNumToPath = containers.Map('KeyType' , 'int32' , 'ValueType' , 'char');
-h.pathToFileNum = containers.Map('KeyType' , 'char' , 'ValueType' , 'int32');
-h.nextSpikeIndex = [1 1 1];
-h.assignments = {};
-h.totalCount = 0;
-
-for fileNum = 1:numel(spikeFiles)
-    filePath = spikeFiles{fileNum};
-    h.fileNumToPath(fileNum) = filePath;
-    h.pathToFileNum(filePath) = fileNum;
-end
-save(h.saveFile,'-struct','h','fileNumToPath','pathToFileNum','assignments','totalCount');
-displaynextspike(hObject,h);
-
+function assigncurrentroi(hObject,h,assignment)
+% ASSIGNCURRENTROI
+h.assignments{h.currRoiNum} = h.neuronTypes{assignment};
+getnextroi(hObject,h);
 
 function saveassignments(h)
-save(h.saveFile,'-append','-struct','h','currSpikeIndex','assignments','totalCount');
+save(h.roiFile,'-append','-struct','h','assignments');
 
 % --- Executes on button press in browseButton.
 function browseButton_Callback(hObject, eventdata, h)
 % hObject    handle to browseButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
+if isfield(h,'baseDir')
+    saveassignments(h);
+end
+
 baseDir = uigetdir('', 'Select a folder');
 if baseDir == 0; return; end;
 h.baseDir = baseDir;
 
 set(h.folderText , 'String' , h.baseDir)
 
-h.saveFile = [baseDir filesep 'trainingdata.mat'];
-if exist(h.saveFile,'file')
-    resumefromfile(hObject,h);
+pngFileName = currentdir(h.baseDir , '^label-.*.png$');
+snap = imread([h.baseDir filesep pngFileName{1}]);
+set(h.figAxes , 'Visible' , 'on');
+axes(h.figAxes);
+imshow(snap);
+
+roiFileName = currentdir(h.baseDir , '^roi-.*.mat$');
+h.roiFile = [h.baseDir filesep roiFileName{1}];
+h.roiData = load(h.roiFile);
+h.totalRoiNum = numel(h.roiData.roiMasks);
+h.currRoiNum = 0;
+if isfield(h.roiData,'assignments')
+    h.assignments = h.roiData.assignments;
 else
-    initialize(hObject, h);
+    h.assignments = cell(1,h.totalRoiNum);
 end
+
+getnextroi(hObject,h);
+
 
 % --- Executes on button press in previousButton.
 function previousButton_Callback(hObject, eventdata, h)
@@ -264,8 +139,8 @@ function previousButton_Callback(hObject, eventdata, h)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
 if ~isfield(h,'baseDir'); return; end;
-h = getprevspike(hObject, h);
-displaynextspike(hObject, h);
+getprevroi(hObject, h);
+
 
 % --- Executes on button press in nextButton.
 function nextButton_Callback(hObject, eventdata, h)
@@ -273,8 +148,7 @@ function nextButton_Callback(hObject, eventdata, h)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
 if ~isfield(h,'baseDir'); return; end;
-h = getnextspike(hObject, h);
-displaynextspike(hObject, h);
+getnextroi(hObject, h);
 
 
 % --- Executes on button press in dgcButton.
@@ -283,7 +157,7 @@ function dgcButton_Callback(hObject, eventdata, h)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
 if ~isfield(h,'baseDir'); return; end;
-assigncurrentspike(hObject, h,1);
+assigncurrentroi(hObject, h,1);
 
 
 % --- Executes on button press in inhibButton.
@@ -292,7 +166,7 @@ function inhibButton_Callback(hObject, eventdata, h)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
 if ~isfield(h,'baseDir'); return; end;
-assigncurrentspike(hObject, h,2);
+assigncurrentroi(hObject, h,2);
 
 
 % --- Executes on button press in ca1Button.
@@ -301,7 +175,7 @@ function ca1Button_Callback(hObject, eventdata, h)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
 if ~isfield(h,'baseDir'); return; end;
-assigncurrentspike(hObject, h,3);
+assigncurrentroi(hObject, h,3);
 
 
 % --- Executes on button press in ca3Button.
@@ -310,17 +184,7 @@ function ca3Button_Callback(hObject, eventdata, h)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % h    structure with h and user data (see GUIDATA)
 if ~isfield(h,'baseDir'); return; end;
-assigncurrentspike(hObject, h,4);
-
-
-% --- Executes on button press in onStateButton.
-function onStateButton_Callback(hObject, eventdata, h)
-% hObject    handle to onStateButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% h    structure with h and user data (see GUIDATA)
-if ~isfield(h,'baseDir'); return; end;
-assigncurrentspike(hObject, h,5);
-
+assigncurrentroi(hObject, h,4);
 
 
 % --- Executes on key press with focus on figure1 and none of its controls.
@@ -333,13 +197,13 @@ function figure1_KeyPressFcn(hObject, eventdata, h)
 % handles    structure with handles and user data (see GUIDATA)
 switch eventdata.Key
     case '1'
-        assigncurrentspike(hObject,h,1);
+        assigncurrentroi(hObject,h,1);
     case '2'
-        assigncurrentspike(hObject,h,2);
+        assigncurrentroi(hObject,h,2);
     case '3'
-        assigncurrentspike(hObject,h,3);
+        assigncurrentroi(hObject,h,3);
     case '4'
-        assigncurrentspike(hObject,h,4);
+        assigncurrentroi(hObject,h,4);
 end
 
 

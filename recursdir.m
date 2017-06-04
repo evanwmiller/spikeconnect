@@ -1,6 +1,7 @@
 function Outfiles=recursdir(baseDir,searchExpression)
 % OUTFILES = RECURSDIR(BASEDIRECTORY,SEARCHEXPRESSION)
 % A recursive search to find files that match the search expression
+% Example: recursdir(h.baseDir , '^spikes-.*.mat$');
 %
 
 dstr = dir(baseDir);%search current directory and put results in structure
