@@ -15,7 +15,11 @@ for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
         [xcorrArr, lagArrMs] = plotxcorr(fileGroup, roi1,roi2,xcorrLagMs,false);
         counts = bucket(xcorrArr, lagArrMs, monoMinLagMs, monoMaxLagMs);
-        ratioArr(roi1,roi2) = (counts.forward + 1)/(counts.backward + 1);
+        if counts.forward >= counts.backward
+            ratioArr(roi1,roi2) = (counts.forward + 1)/(counts.backward + 1);
+        else
+            ratioArr(roi1,roi2) = -(counts.backward + 1)/(counts.forward + 1);
+        end
     end
 end
 dir = fileparts(fileGroup{1});
