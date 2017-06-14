@@ -10,15 +10,17 @@ function ratioArr = calcratio(fileGroup, xcorrLagMs, monoMinLagMs, monoMaxLagMs)
 load(fileGroup{1},'roiTraces');
 nRoi = numel(roiTraces);
 
+spikeCountArr = countspikes(fileGroup);
+
 ratioArr = nan(nRoi);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
         [xcorrArr, lagArrMs] = plotxcorr(fileGroup, roi1,roi2,xcorrLagMs,false);
         counts = bucket(xcorrArr, lagArrMs, monoMinLagMs, monoMaxLagMs);
-        if counts.forward >= counts.backward
-            ratioArr(roi1,roi2) = (counts.forward + 1)/(counts.backward + 1);
-        else
-            ratioArr(roi1,roi2) = -(counts.backward + 1)/(counts.forward + 1);
+        if counts.forward >= counts.backward && spikeCountArr(roi1) > 0
+            ratioArr(roi1,roi2) = counts.forward/spikeCountArr(roi1);
+        elseif counts.backward >= counts.forward && spikeCountArr(roi2) > 0
+            ratioArr(roi1,roi2) = counts.backward/spikeCountArr(roi2);  
         end
     end
 end
@@ -32,7 +34,7 @@ counts.synch = sum(xcorrArr(find(lagArrMs > -monoMinLagMs & lagArrMs < monoMinLa
 
 function connectionArr = classify(ratioArr)
 connectionArr = {};
-ratioThreshold = 3;
+ratioThreshold = 0.25;
 nRoi = size(ratioArr,1);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
