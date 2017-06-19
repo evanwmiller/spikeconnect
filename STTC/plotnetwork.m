@@ -2,7 +2,7 @@ function plotnetwork(fileGroup,xcorrLagMs, monoMinLagMs, monoMaxLagMs)
 % PLOTNETWORK Work in progress.
 ratioArr = calcratio(fileGroup, xcorrLagMs, monoMinLagMs, monoMaxLagMs);
 connectionArr = classify(ratioArr);
-plotnetworkgraph(connectionArr, size(ratioArr,1), 'Ratio based monosynaptic');
+plotnetworkgraph(connectionArr, size(ratioArr,1), 'Ratio based monosynaptic',fileGroup);
 save('ratio.mat','ratioArr');
 
 
@@ -48,14 +48,16 @@ for roi1 = 1:nRoi
 end
 
 
-function plotnetworkgraph(directionalArr, nRoi, plotTitle)
+function plotnetworkgraph(directionalArr, nRoi, plotTitle, fileGroup)
 if numel(directionalArr) == 0
+    disp('There were 0 edges for this dataset.');
     return;
 end
 
 s = zeros(size(directionalArr));
 t = zeros(size(directionalArr));
 weights = zeros(size(directionalArr));
+
 for i = 1:numel(weights)
     s(i) = directionalArr{i}(1);
     t(i) = directionalArr{i}(2);
@@ -68,3 +70,31 @@ p = plot(G,'Layout','force','EdgeLabel',G.Edges.Weight);
 p.MarkerSize = 10;
 p.EdgeColor = 'r';
 title(plotTitle);
+
+% Color each node according to the assignment, if it exists.
+dir = fileparts(fileGroup{1});
+roiFile = currentdir(dir, '^roi-.*.mat$');
+
+if ~isempty(roiFile)
+    % Throws warning if assignments haven't been made yet.
+    load([dir filesep roiFile{1}],'assignments');
+end
+
+if exist('assignments','var')
+    for i = 1:numel(assignments)
+        switch assignments{i}
+            case 'DGC'
+                highlight(p,i,'NodeColor','g');
+            case 'Inhib'
+                highlight(p,i,'NodeColor','b');
+            case 'CA1'
+                highlight(p,i,'NodeColor','c');
+            case 'CA3'
+                highlight(p,i,'NodeColor','m');
+        end
+    end
+    disp('Legend for node colors:');
+    disp('Green - DGC, Blue - Inhib, Cyan - CA1, Magenta - CA3');
+end
+    
+

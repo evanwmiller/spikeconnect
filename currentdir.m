@@ -1,6 +1,7 @@
 function outfiles=currentdir(baseDir,searchExpression, exclude)
 % CURRENTDIR searches Searches specified folder for matches, excluding the
 % file specified by exclude.
+% Example: currentdir(h.baseDir , '^spikes-.*.mat$');
 % Copyright 2016 The Miller Lab, UC Berkeley
 
 if nargin < 3
