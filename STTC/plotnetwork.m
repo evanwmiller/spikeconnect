@@ -17,10 +17,13 @@ for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
         [xcorrArr, lagArrMs] = plotxcorr(fileGroup, roi1,roi2,xcorrLagMs,false);
         counts = bucket(xcorrArr, lagArrMs, monoMinLagMs, monoMaxLagMs);
+        % When more on right than back, the roi2 is trigger cell.
+        % Negative value in ratioArr indicates reverse arrow.
         if counts.forward >= counts.backward && spikeCountArr(roi1) > 0
-            ratioArr(roi1,roi2) = counts.forward/spikeCountArr(roi1);
+            ratioArr(roi1,roi2) = -counts.forward/spikeCountArr(roi2);
+        % If more on left than right, then roi1 is triggering.
         elseif counts.backward >= counts.forward && spikeCountArr(roi2) > 0
-            ratioArr(roi1,roi2) = counts.backward/spikeCountArr(roi2);  
+            ratioArr(roi1,roi2) = counts.backward/spikeCountArr(roi1);  
         end
     end
 end
