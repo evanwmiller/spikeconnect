@@ -127,7 +127,8 @@ if ~isfield(handles,'spikeFileStruct')
     errordlg('Please select a folder first.');
     return;
 end
-plotrois(handles.fileGroup{1});
+fileGroup = getfilegroup(handles);
+plotrois(fileGroup{1});
 
 
 % --- Executes on button press in networkButton.
