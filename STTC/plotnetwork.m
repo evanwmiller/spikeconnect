@@ -57,6 +57,8 @@ if numel(directionalArr) == 0
     return;
 end
 
+disp('Calculating network ratios, please wait...');
+
 s = zeros(size(directionalArr));
 t = zeros(size(directionalArr));
 weights = zeros(size(directionalArr));
@@ -98,6 +100,59 @@ if exist('assignments','var')
     end
     disp('Legend for node colors:');
     disp('Green - DGC, Blue - Inhib, Cyan - CA1, Magenta - CA3');
+    countedges(s, t, weights, assignments);
 end
+
+function countedges(s,t,weights,assignments) 
+counts = zeros(4,4);
+ratioSum = zeros(4,4);
+for i = 1 : numel(weights) 
+    row = 0;
+    col = 0;
+    switch assignments{t(i)}
+        case 'DGC'
+            row = 1;
+        case 'Inhib'
+            row = 2;
+        case 'CA1'
+            row = 3;
+        case 'CA3'
+            row = 4;
+    end
+    
+    switch assignments{s(i)}
+        case 'DGC'
+            col = 1;
+        case 'Inhib'
+            col = 2;
+        case 'CA1'
+            col = 3;
+        case 'CA3'
+            col = 4;
+    end
+    counts(row,col) = counts(row,col) + 1;
+    ratioSum(row, col) = ratioSum(row, col) + weights(i);
+end
+
+ratioAverage = ratioSum ./ counts;
+ratioAverage(isinf(ratioAverage)) = NaN;
+
+rowHeaders = {'DGC','Inhib','CA1','CA3'};
+DGC = counts(:,1);
+Inhib = counts(:,2);
+CA1 = counts(:,3);
+CA3 = counts(:,4);
+
+triggerCount = table(DGC,Inhib,CA1,CA3,'RowNames',rowHeaders);
+disp(triggerCount);
+
+DGC = ratioAverage(:,1);
+Inhib = ratioAverage(:,2);
+CA1 = ratioAverage(:,3);
+CA3 = ratioAverage(:,4);
+
+ratioAverage = table(DGC,Inhib,CA1,CA3,'RowNames',rowHeaders);
+disp(ratioAverage);
+
     
 
