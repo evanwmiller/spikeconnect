@@ -100,36 +100,67 @@ if exist('assignments','var')
     end
     disp('Legend for node colors:');
     disp('Green - DGC, Blue - Inhib, Cyan - CA1, Magenta - CA3');
-    countedges(s, t, weights, assignments);
+    connectivityfactor(s, t, weights, assignments);
 end
 
-function countedges(s,t,weights,assignments) 
+% EXPERIMENTAL
+% s is triggering cell, t is receiving
+function connectivityfactor(s,t ,weights, assignments)
+% count edges from each ROI to each type.
+edgeCount = zeros(4, numel(assignments));
+for i = 1 : numel(weights)
+    col = s(i);
+    row = getValueOfAssignment(assignments{t(i)});
+    edgeCount(row, col) = edgeCount(row, col) + 1;
+end
+
+% count how many of each cell type there are
+typesCount = [0 0 0 0]';
+for i = 1 : numel(assignments)
+    row = getValueOfAssignment(assignments{i});
+    typesCount(row) = typesCount(row) + 1;
+end
+
+% normalize each roi (column) by the number of its cell type
+normalizedEdgeCount = zeros(size(edgeCount));
+for i = 1 : numel(assignments)
+    numOfSameCellType = typesCount(getValueOfAssignment(assignments{i}));
+    normalizedEdgeCount(:,i) = edgeCount(:,i) / numOfSameCellType;
+end
+
+% combine normalized counts based on cell type.
+combinedBasedOnCellType = zeros(4,4);
+for i = 1 : numel(assignments)
+    col = getValueOfAssignment(assignments{i});
+    combinedBasedOnCellType(:, col) = combinedBasedOnCellType(:, col) + normalizedEdgeCount(:, i);
+end
+
+% average by cell type count again
+for col = 1 : 4
+    combinedBasedOnCellType(:, col) = combinedBasedOnCellType(:, col) ./ typesCount(col);
+end
+
+disp('Select file for .csv output');
+[file,path] = uiputfile('*.csv','Save Results As');
+if (file == 0); return; end;
+csvPath = [path file];
+
+dlmwrite(csvPath, edgeCount, 'roffset', 1, 'coffset', 1)
+dlmwrite(csvPath, typesCount, '-append', 'roffset', 1, 'coffset', numel(assignments)+3);
+dlmwrite(csvPath, normalizedEdgeCount, '-append', 'roffset', 6, 'coffset', 1);
+dlmwrite(csvPath, combinedBasedOnCellType, '-append', 'roffset', 11, 'coffset', 1);
+
+fprintf('Writing to %s successful.', csvPath);
+
+% EXPERIMENTAL
+% Ratio based. Takes the sum of trigger ratios of A->B connections, then
+% divides by the total number of A->B connections.
+function countedgesratiobased(s,t,weights,assignments) 
 counts = zeros(4,4);
 ratioSum = zeros(4,4);
 for i = 1 : numel(weights) 
-    row = 0;
-    col = 0;
-    switch assignments{t(i)}
-        case 'DGC'
-            row = 1;
-        case 'Inhib'
-            row = 2;
-        case 'CA1'
-            row = 3;
-        case 'CA3'
-            row = 4;
-    end
-    
-    switch assignments{s(i)}
-        case 'DGC'
-            col = 1;
-        case 'Inhib'
-            col = 2;
-        case 'CA1'
-            col = 3;
-        case 'CA3'
-            col = 4;
-    end
+    row = getValueOfAssignment(assignments{t(i)});
+    col = getValueOfAssignment(assignments{s(i)});
     counts(row,col) = counts(row,col) + 1;
     ratioSum(row, col) = ratioSum(row, col) + weights(i);
 end
@@ -153,6 +184,19 @@ CA3 = ratioAverage(:,4);
 
 ratioAverage = table(DGC,Inhib,CA1,CA3,'RowNames',rowHeaders);
 disp(ratioAverage);
+
+function value = getValueOfAssignment(assignment)
+switch assignment
+    case 'DGC'
+        value = 1;
+    case 'Inhib'
+        value = 2;
+    case 'CA1'
+        value = 3;
+    case 'CA3'
+        value = 4;
+end
+
 
     
 
