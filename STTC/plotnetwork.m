@@ -121,21 +121,21 @@ for i = 1 : numel(assignments)
     typesCount(row) = typesCount(row) + 1;
 end
 
-% normalize each roi (column) by the number of its cell type
+% normalize each row by the number of the receiving cell type
 normalizedEdgeCount = zeros(size(edgeCount));
-for i = 1 : numel(assignments)
-    numOfSameCellType = typesCount(getValueOfAssignment(assignments{i}));
-    normalizedEdgeCount(:,i) = edgeCount(:,i) / numOfSameCellType;
+for i = 1 : numel(typesCount) % 4 rows
+    numOfReceivingCellType = typesCount(i);
+    normalizedEdgeCount(i,:) = edgeCount(i,:) / numOfReceivingCellType;
 end
 
-% combine normalized counts based on cell type.
+% combine normalized counts based on trigger cell type.
 combinedBasedOnCellType = zeros(4,4);
 for i = 1 : numel(assignments)
     col = getValueOfAssignment(assignments{i});
     combinedBasedOnCellType(:, col) = combinedBasedOnCellType(:, col) + normalizedEdgeCount(:, i);
 end
 
-% average by cell type count again
+% average by trigger cell type count.
 for col = 1 : 4
     combinedBasedOnCellType(:, col) = combinedBasedOnCellType(:, col) ./ typesCount(col);
 end
