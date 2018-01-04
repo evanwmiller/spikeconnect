@@ -1,0 +1,3 @@
+[submodule "GLMspiketools"]
+	path = GLMspiketools
+	url = https://github.com/pillowlab/GLMspiketools
