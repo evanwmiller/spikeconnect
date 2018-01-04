@@ -7,7 +7,7 @@ function spikeData = spikekmeans(traceFeatures, roiTraceIn, K)
     
     % Use k-means clustering to assign each point in the trace vector to
     % either cluster 1 (baseline), cluster 2, or cluster 3 (spikes).
-    clusterIndices = kmeans(traceFeatures, K);
+    clusterIndices = kmeans(roiTrace', K);
     
     for i = 1:K
         kdx(i,:) = clusterIndices == i;

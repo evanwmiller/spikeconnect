@@ -74,7 +74,7 @@ end
 if isempty(handles.spikeFilePaths)
     errordlg('No files found');
 else
-    %aggregate dffSnr of all ROIs from selected files to plot distribution
+    % aggregate dffSnr of all ROIs from selected files to plot distribution
     for iSpikeFile = 1:numel(handles.spikeFilePaths)
         load(handles.spikeFilePaths{iSpikeFile} , 'spikeDataArray');
         for i = 1:numel(spikeDataArray)
@@ -95,9 +95,10 @@ function plotdistribution(dffSNRValues, hObject, handles)
 handles.threshold = 5;
 set(handles.dist_axes , 'Visible' , 'on')
 axes(handles.dist_axes);
-binranges = (-5 : 0.2 : 40);
-handles.dffSnrDist = histc(dffSNRValues , binranges);
-bar(binranges , handles.dffSnrDist , 'histc');
+
+[handles.dffSnrDist, edges] = histcounts(dffSNRValues , 100);
+centers = (edges(1:end-1) + edges(2:end))/2;
+bar(centers, handles.dffSnrDist);
 
 title('SNR of $$\frac{\Delta F}{F}$$ distribution'  , 'Interpreter' , 'latex')
 handles.lineHandle = line([handles.threshold handles.threshold] , [0 max(handles.dffSnrDist)] , 'Color' , 'r');
