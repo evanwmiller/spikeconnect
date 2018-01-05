@@ -102,7 +102,7 @@ handles.data = load(handles.couplingFilePath);
 
 numCells = size(handles.data.couplingFilters, 1);
 
-handles.numCells = numCells
+handles.numCells = numCells;
 handles.receivingCell = 1;
 handles.drivingCell = 1;
 set(handles.receivingSlider, 'Min', 1, 'Max', numCells, 'Value', 1, 'SliderStep', [1/numCells 1/numCells]);
