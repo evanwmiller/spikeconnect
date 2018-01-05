@@ -16,8 +16,4 @@ function lbtrace = slidingwindowflattener (trace, window_size)
     end
 
     lbtrace(lbtrace < 0) = 0;
-    
-    % ADDED TO REMOVE SLIDING WINDOW FLATTENER FUNCTIONALITY.
-    % DO NOT PUSH TO MASTER.
-    lbtrace = trace';
 end
