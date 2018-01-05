@@ -118,7 +118,7 @@ for iRoiFile = 1:numel(roiFilePaths)
     end
 end
 
-% For each PCA/ICA file, which already has background adjusted traces, just
+% For each PCA/ICA file, which already has dff, use SPIKEKMEANSDFF to
 % cluster and save to a spikes-*.mat file in the same directory. PCA/ICA
 % files are assumed to be of the format ica_traces_maps_*.mat.
 % Frame rate assumed to be 500 fps.
@@ -134,7 +134,7 @@ for iIcaFile = 1:numel(icaFilePaths)
         iIcaFile,numel(icaFilePaths));
     set(handles.info_txt , 'String' , msg);
     
-    % Extract traces from PCA/ICA analysis.
+    % Extract relative fluorescence traces from PCA/ICA analysis.
     for iTrace = 1:size(traces_cells, 2)
         trace = traces_cells(:, iTrace)';
         
@@ -155,7 +155,7 @@ for iIcaFile = 1:numel(icaFilePaths)
     for iTrace = 1:nTrace
         diffFeatures{iTrace} = slidingwindowflattener(...
             bkgSubtractedTraces{iTrace} , WINDOW);
-        spikeDataArray{iTrace} = spikekmeans(diffFeatures{iTrace},...
+        spikeDataArray{iTrace} = spikekmeansdff(diffFeatures{iTrace},...
             bkgSubtractedTraces{iTrace}, K);
         spikeDataArray{iTrace}.rasterSpikeTimes = burstaggregator(...
             spikeDataArray{iTrace}.rasterSpikeTimes, REARM_FACTOR);
