@@ -1,9 +1,9 @@
-function [t, couplingFilters] = compute_coupled_glm(binarySpike, frameRate)
-% COMPUTE_COUPLED_GLM Uses GLMspiketools to find the coupling filters
+function [t, couplingFilters] = computecoupledglm(binarySpike, frameRate)
+% COMPUTECOUPLEDGLM Uses GLMspiketools to find the coupling filters
 % between neurons. Sets the Stim to 0 since there is no stimulus.
 %   
-% Input: spikeTimes is cell array with spikeTimes{i} is the frame numbers
-% of spikes from neuron i.
+% Input: binarySpike is binary array where 1 corresponds to a spike.
+%        frameRate is number of frames per second.
 %
 % Returns a cell array where filter{i,j} is the coupling filter from neuron
 % i to neuron j.
@@ -15,10 +15,17 @@ dtSp = dtStim;
 nkt = 20;
 Stim = zeros(numFrames, 1);
 
-% Use makeSimStruct_GLM to get default parameters.
-ggsim = makeSimStruct_GLM(nkt, dtStim, dtSp);
-[ktbas, ktbasis] = makeBasis_StimKernel(ggsim.ktbasprs, nkt);
-[iht, ihbas, ihbasis] = makeBasis_PostSpike(ggsim.ihbasprs, dtSp);
+% ktbasprs don't matter since stimulus is 0.
+ktbasprs.neye = 5;
+ktbasprs.ncos = 5;
+ktbasprs.kpeaks = [0 7.5];
+ktbasprs.b = 1;
+[ktbas, ktbasis] = makeBasis_StimKernel(ktbasprs, nkt);
+
+ihbasprs.ncols = 5;
+ihbasprs.hpeaks = [0 0.04];
+ihbasprs.b = 0.1;
+[iht, ihbas, ihbasis] = makeBasis_PostSpike(ihbasprs, dtSp);
 
 % Initial fitting parameters
 gg0 = makeFittingStruct_GLM(dtStim, dtSp);
