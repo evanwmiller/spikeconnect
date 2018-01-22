@@ -52,16 +52,19 @@ handles.baseDir = baseDir;
 
 set(handles.folderText , 'String' , handles.baseDir)
 
-spikeFileStruct = findgroups(handles.baseDir);
-if isempty(fieldnames(spikeFileStruct))
+handles.spikeFileStruct = findgroups(handles.baseDir);
+if isempty(fieldnames(handles.spikeFileStruct))
     errordlg('No files found.');
     return;
 else
-    spikeFileNames = extractnames(spikeFileStruct, baseDir);
+    spikeFileNames = extractnames(handles.spikeFileStruct, baseDir);
     set(handles.fileListbox , 'String' , spikeFileNames);
     set(handles.fileListbox, 'Value', 1);
+    fileGroup = getfilegroup(handles);
+    load(fileGroup{1}, 'threshold');
+    set(handles.rearmPopup, 'Value', threshold);
+    
 end
-handles.spikeFileStruct = spikeFileStruct;
 
 guidata(hObject, handles);
 
@@ -163,6 +166,37 @@ sttctoexcel(handles.baseDir,excelPath,handles.sttcMaxLagMs);
 disp('Excel export completed.');
 
 
+% --- Executes on button press in previewButton.
+function previewButton_Callback(hObject, eventdata, handles)
+% hObject    handle to previewButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'spikeFileStruct')
+    errordlg('Please select a folder first.');
+    return;
+end
+
+fileGroup = getfilegroup(handles);
+load(fileGroup{1}, 'threshold');
+previewthreshold(fileGroup, threshold, getrearmfactor(handles));
+
+
+% --- Executes on button press in saveButton.
+function saveButton_Callback(hObject, eventdata, handles)
+% hObject    handle to saveButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'spikeFileStruct')
+    errordlg('Please select a folder first.'); 
+    return;
+end
+
+fileGroup = getfilegroup(handles);
+load(fileGroup{1}, 'threshold');
+savethreshold(fileGroup, threshold, getrearmfactor(handles));
+disp('Spike times updated and saved.')
+
+
 % ==================== PARAMETER UPDATES ===================== %
 function sttcMaxLagEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to sttcMaxLagEdit (see GCBO)
@@ -245,6 +279,14 @@ if isempty(ext) %selected group
 else
     plotspikes(fileGroup{1},roi1,roi2);
 end
+
+
+function rearmFactor = getrearmfactor(handles)
+% Reads the rearm factor from user selection.
+contents = cellstr(get(handles.rearmPopup,'String'));
+selectedIndex = get(handles.rearmPopup,'Value');
+selectedStr = contents{selectedIndex};
+rearmFactor = str2num(selectedStr);
 
 % ==================== UNUSED GUIDE FUNCTIONS ==================== %
 
@@ -338,3 +380,26 @@ function figAxes_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to figAxes (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in rearmPopup.
+function rearmPopup_Callback(hObject, eventdata, handles)
+% hObject    handle to rearmPopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns rearmPopup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from rearmPopup
+
+
+% --- Executes during object creation, after setting all properties.
+function rearmPopup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rearmPopup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

@@ -130,55 +130,7 @@ function preview_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles.rearmFactor = getrearmfactor(handles);
-
-roiCounts = 0;
-axhandles = createpreviewfigure;
-for iSpikeFile = 1:numel(handles.spikeFilePaths)
-    roiLabel = 1;
-    load(handles.spikeFilePaths{iSpikeFile} ,'spikeDataArray' ,'roiTraces' )
-    fprintf('Movie %d: %s \n', iSpikeFile,handles.spikeFilePaths{iSpikeFile});
-    for i = 1:numel(spikeDataArray)
-        roiCounts = roiCounts + 1;
-        tmp = spikeDataArray{i}.dffSnr;
-        tmp(tmp < handles.threshold) = NaN;
-        spikeDataArray{i}.rasterSpikeTimes = find(~isnan(tmp));
-        spikeDataArray{i}.rasterSpikeTimes = ...
-            burstaggregator(spikeDataArray{i}.rasterSpikeTimes, handles.rearmFactor);
-        
-        %plot in groups of 3 by 3
-        if mod(roiCounts , 9) ~= 0
-            axes(axhandles{mod(roiCounts , 9)}('trace'))
-            plot(roiTraces{i})
-            traceLength = numel(roiTraces{i});
-            
-            axes(axhandles{mod(roiCounts , 9)}('spikes'))
-            t = spikeDataArray{i}.rasterSpikeTimes;
-            for ll = 1:numel(t)
-                line([t(ll)  t(ll)] , [0.0  1.0] , 'Color' , 'k')
-            end
-            line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
-            line([1 1] , [0.0 1.0] , 'Color' , 'w');
-            title(sprintf('Movie %d ROI %d', iSpikeFile, roiLabel));
-            roiLabel = roiLabel + 1;
-            
-        else
-            axes(axhandles{9}('trace'));
-            plot(roiTraces{i})
-            
-            axes(axhandles{9}('spikes'));
-            t = spikeDataArray{i}.rasterSpikeTimes;
-            for ll = 1:numel(t)
-                line([t(ll)  t(ll)] , [0.0  1.0] , 'Color' , 'k')
-            end
-            line([traceLength traceLength] , [0.0 1.0] , 'Color' , 'w');
-            line([1 1] , [0.0 1.0] , 'Color' , 'w');
-            title(sprintf('Movie %d ROI %d', iSpikeFile, roiLabel));
-            roiLabel = roiLabel + 1;
-            axhandles = createpreviewfigure;
-        end
-    end    
-
-end
+previewthreshold(handles.spikeFilePaths, handles.threshold, handles.rearmFactor)
 guidata(hObject, handles);
 
 % --- Executes on button press in save_button.
@@ -188,47 +140,7 @@ function save_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 handles.rearmFactor = getrearmfactor(handles);
-
-for iSpikeFile = 1:numel(handles.spikeFilePaths)
-    load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray', ...
-        'roiTraces', 'frameRate');
-    %instantaneous frequency
-    ifreqs = {};
-    %interspike interval
-    isiMs = {};
-    freqs = {};
-    
-    % get number of frames per video
-    nFrame = numel(spikeDataArray{1}.dffSnr);
-    
-    for i = 1:numel(spikeDataArray)
-        %replace subtreshold events with NaN
-        tmp = spikeDataArray{i}.dffSnr;
-        tmp(tmp < handles.threshold) = NaN;
-        
-        spikeDataArray{i}.rasterSpikeTimes = find(~isnan(tmp));
-        spikeDataArray{i}.rasterSpikeTimes = ...
-            burstaggregator(spikeDataArray{i}.rasterSpikeTimes , handles.rearmFactor);
-        
-        [ifreqs{i}, isiMs{i}, freqs{i}] = ...
-            ifreq(spikeDataArray{i}.rasterSpikeTimes,frameRate, nFrame); 
-    end
-    
-    save(handles.spikeFilePaths{iSpikeFile} ,'spikeDataArray' ,'-append');
-    rearmFactor = handles.rearmFactor;
-    threshold = handles.threshold;
-    save(handles.spikeFilePaths{iSpikeFile}, 'rearmFactor','threshold','-append');
-    
-    [pathstr,movieName,~] = fileparts(handles.spikeFilePaths{iSpikeFile});
-    % 8 is length of 'spikes-' tag
-    nameWithoutPrefix = movieName(8:end);
-    filename = ['ifreqs-' nameWithoutPrefix '.mat'];
-    if exist([pathstr filesep filename], 'file')
-      save([pathstr filesep filename] , 'ifreqs', 'isiMs', 'freqs' , '-append')
-    else
-      save([pathstr filesep filename], 'ifreqs' , 'isiMs', 'freqs')
-    end
-end
+savethreshold(handles.spikeFilePaths, handles.threshold, handles.rearmFactor);
 disp('Spike times updated and saved.')
 
 guidata(hObject, handles);
