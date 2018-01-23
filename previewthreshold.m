@@ -14,7 +14,9 @@ for iSpikeFile = 1:numel(spikeFilePaths)
         tmp(tmp < threshold) = NaN;
         spikeDataArray{i}.rasterSpikeTimes = find(~isnan(tmp));
         spikeDataArray{i}.rasterSpikeTimes = ...
-            burstaggregator(spikeDataArray{i}.rasterSpikeTimes, rearmFactor);
+            burstaggregator(spikeDataArray{i}.rasterSpikeTimes, ...
+                roiTraces{i}, ...
+                rearmFactor);
         
         %plot in groups of 3 by 3
         if mod(roiCounts , 9) ~= 0
