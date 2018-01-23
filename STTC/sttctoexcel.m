@@ -1,4 +1,4 @@
-function sttctoexcel(baseDir, excelPath, sttcMaxLagMs)
+function sttctoexcel(baseDir, excelPath, sttcMaxLagMs, includeNonFiring)
 %STTCTOEXCEL Exports STTC data for a cover slip directory given a STTC lag
 %window.
 % Input:
@@ -11,10 +11,15 @@ function sttctoexcel(baseDir, excelPath, sttcMaxLagMs)
 %           \Area *, etc.
 %   excelPath: path to save Excel file
 %   sttcMaxLagMs: lag window to use to calculate STTC (in ms)
+%   includeNonFiring: if true, non firing cells will be outputted as 0.
 % Output: Writes 
 
 % Copyright 2017, The Miller Lab, UC Berkeley
 % Author: Patrick Zhang
+
+if nargin < 4
+    includeNonFiring = true;
+end
 
 spikeFileStruct = findgroups(baseDir);
 groups = sort(fieldnames(spikeFileStruct));
@@ -22,7 +27,11 @@ composites = [];
 for iGroup = 1:numel(groups)
     groupName = groups{iGroup};
     fileNames = spikeFileStruct.(groupName);
-    groupMean = writegrouptoexcel(excelPath, groupName, fileNames, sttcMaxLagMs);
+    groupMean = writegrouptoexcel(excelPath, ...
+            groupName, ...
+            fileNames, ...
+            sttcMaxLagMs, ...
+            includeNonFiring);
     composites = vertcat(composites,groupMean);
 end
 wt({'Composite Aggregate'}, excelPath, 'Aggregate',1,1);
@@ -33,7 +42,7 @@ if ispc
 end
 
 
-function compositeCol = writegrouptoexcel(excelPath, groupName, fileNames, lag)
+function compositeCol = writegrouptoexcel(excelPath, groupName, fileNames, lag, includeNonFiring)
 % WRITEGROUPTOEXCEL Calculates the STTC array for a set of movies given by
 % fileNames and writes it to a tab specified by groupName in the Excel file
 % specified by excelPath. It writes the STTC array for each movie as a
@@ -41,6 +50,13 @@ function compositeCol = writegrouptoexcel(excelPath, groupName, fileNames, lag)
 % calculates the groupMean, which is outputted.
 currCol = 1;
 [groupSttcArr, fileSttcArrs] = calcsttcarr(fileNames,lag);
+if includeNonFiring
+    groupSttcArr(isnan(groupSttcArr)) = 0;
+    for i = 1:numel(fileSttcArrs)
+        fileSttcArrs{i}(isnan(fileSttcArrs{i})) = 0;
+    end
+end
+
 for iFile = 1:numel(fileNames)
     filePath = fileNames{iFile};
     
@@ -49,10 +65,15 @@ for iFile = 1:numel(fileNames)
     wt({label}, excelPath, groupName, 1, currCol);
     
     sttcArr = fileSttcArrs{iFile};
+    countArr = ~isnan(sttcArr);
+    sttcArrNoNan = sttcArr;
+    sttcArrNoNan(isnan(sttcArr)) = 0;
     if iFile == 1
-        sttcSum = sttcArr;
+        sttcSum = sttcArrNoNan;
+        countSum = countArr;
     else
-        sttcSum = sttcSum + sttcArr;
+        sttcSum = sttcSum + sttcArrNoNan;
+        countSum = countSum + countArr;
     end
     
     %label ROI row/columns for heatmap
@@ -94,7 +115,8 @@ if numel(fileNames) > 1
     
     %move over to right
     currCol = currCol + 3 + size(sttcArr,2);
-    sttcMean = sttcSum / numel(fileNames);
+    sttcMean = sttcSum ./ countSum;
+    sttcMean(isinf(sttcMean)) = NaN;
     
     wt({'Mean'}, excelPath, groupName, 1, currCol);
     %label ROI row/columns for heatmap
