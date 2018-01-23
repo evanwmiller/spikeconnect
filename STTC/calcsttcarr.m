@@ -2,8 +2,8 @@ function [groupSttcArr, fileSttcArrs] = calcsttcarr(spikeFileGroup, sttcMaxLagMs
 %CALCSTTCARR Given a spikeFileGroup, calculates the pairwise spike time
 %tiling coefficient (sttc) using CALCSTTC. Returns the sttc array for the
 %group as well as for each individual file in the group.
-%   The bottom left triangle is set to be 1.05 so that it will show up 
-%   white in the heatmap.
+%   The bottom left triangle is set to be NaN.
+%   STTCs with non-firing cells are also NaN.
 %
 %   Inputs:
 %       spikeFileGroup: cell array of spike files w/ same ROI and framerate
@@ -18,8 +18,8 @@ function [groupSttcArr, fileSttcArrs] = calcsttcarr(spikeFileGroup, sttcMaxLagMs
 
 [timesArr, nFrameArr, maxLagFrame] = combine(spikeFileGroup, sttcMaxLagMs);
 nRoi = numel(timesArr);
-%initialize each sttc array to nRoi x nRoi array of 1.05
-groupSttcArr = ones(nRoi, nRoi) .* 1.05;
+%initialize each sttc array to nRoi x nRoi array of NaN
+groupSttcArr = nan(nRoi, nRoi);
 fileSttcArrs = cell(1,numel(spikeFileGroup));
 for i = 1:numel(spikeFileGroup)
     fileSttcArrs{i} = groupSttcArr;
@@ -30,10 +30,9 @@ for iRoi = 1:nRoi
     for jRoi = iRoi:nRoi
         r2 = timesArr{jRoi};
         [groupSttc, fileSttcs] = calcsttc(r1, r2 , maxLagFrame, nFrameArr);
-        %Sets negative values and NaN to be 0.
-        if (groupSttc < 0) || isnan(groupSttc); groupSttc = 0; end;
+        %Set negative values to 0.
+        if groupSttc < 0; groupSttc = 0; end;
         fileSttcs(fileSttcs < 0) = 0;
-        fileSttcs(isnan(fileSttcs)) = 0;
         %Set sttc in appropriate sttcArr
         groupSttcArr(iRoi, jRoi) = groupSttc; 
         for iSttc = 1:numel(fileSttcs)

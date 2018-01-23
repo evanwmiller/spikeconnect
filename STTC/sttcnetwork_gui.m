@@ -82,6 +82,8 @@ end
 % Embeds the heatmap into the figure
 [handles.fileGroup,handles.selection] = getfilegroup(handles);
 sttcArr = calcsttcarr(handles.fileGroup, handles.sttcMaxLagMs);
+% omit NaN from the heat map.
+sttcArr(isnan(sttcArr)) = 1.05;
 axes(handles.figAxes);
 colormap([jet;[1,1,1]]); 
 image(sttcArr , 'CDataMapping','scaled');

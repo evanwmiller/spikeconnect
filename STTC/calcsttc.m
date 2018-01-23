@@ -1,6 +1,6 @@
 function [groupSttc, fileSttcs] = calcsttc(groupA, groupB, dt, nFrameArr)
 % CALCSTTC Calculates the spike time tiling coefficient between spike
-% trains groups a and b. 
+% trains groups a and b. Returns NaN if either A or B has 0 spikes.
 % See http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4205553/.
 %   Input:
 %       groupA: group of spike trains (array of frame numbers with spikes)
@@ -14,7 +14,11 @@ function [groupSttc, fileSttcs] = calcsttc(groupA, groupB, dt, nFrameArr)
 [Pb , Ta , PbArr , TaArr] = calcparams(groupA , groupB , dt , nFrameArr);
 [Pa , Tb , PaArr , TbArr] = calcparams(groupB , groupA , dt , nFrameArr);
 
-groupSttc = 0.5 * ((Pa - Tb)/(1 - Pa*Tb) + (Pb - Ta)/(1 - Pb*Ta));
+if Ta == 0 || Tb == 0
+    groupSttc = NaN;
+else
+    groupSttc = 0.5 * ((Pa - Tb)/(1 - Pa*Tb) + (Pb - Ta)/(1 - Pb*Ta));
+end
 
 fileSttcs = zeros(size(PbArr));
 for iFile = 1:numel(fileSttcs)
@@ -22,7 +26,11 @@ for iFile = 1:numel(fileSttcs)
     Ta = TaArr(iFile);
     Pb = PbArr(iFile);
     Tb = TbArr(iFile);
-    fileSttcs(iFile) = 0.5 * ((Pa - Tb)/(1 - Pa*Tb) + (Pb - Ta)/(1 - Pb*Ta));
+    if Ta == 0 || Tb == 0
+        fileSttcs(iFile) = NaN;
+    else
+        fileSttcs(iFile) = 0.5 * ((Pa - Tb)/(1 - Pa*Tb) + (Pb - Ta)/(1 - Pb*Ta));
+    end
 end
 end
 
