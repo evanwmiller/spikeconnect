@@ -12,7 +12,8 @@ function sttctoexcel(baseDir, excelPath, sttcMaxLagMs, includeNonFiring)
 %   excelPath: path to save Excel file
 %   sttcMaxLagMs: lag window to use to calculate STTC (in ms)
 %   includeNonFiring: if true, non firing cells will be outputted as 0.
-% Output: Writes 
+% Output: Writes file STTC (sttc for each file), composite STTC (sttc for
+%   concatenated files), and mean STTC (mean file STTC).
 
 % Copyright 2017, The Miller Lab, UC Berkeley
 % Author: Patrick Zhang
@@ -24,25 +25,29 @@ end
 spikeFileStruct = findgroups(baseDir);
 groups = sort(fieldnames(spikeFileStruct));
 composites = [];
+means = [];
 for iGroup = 1:numel(groups)
     groupName = groups{iGroup};
     fileNames = spikeFileStruct.(groupName);
-    groupMean = writegrouptoexcel(excelPath, ...
+    [composite, mean] = writegrouptoexcel(excelPath, ...
             groupName, ...
             fileNames, ...
             sttcMaxLagMs, ...
             includeNonFiring);
-    composites = vertcat(composites,groupMean);
+    composites = vertcat(composites, composite);
+    means = vertcat(means, mean);
 end
-wt({'Composite Aggregate'}, excelPath, 'Aggregate',1,1);
-wt(composites, excelPath,'Aggregate',2,1);
+wt({'Composite Aggregate'}, excelPath, 'Aggregate', 1, 1);
+wt(composites, excelPath, 'Aggregate', 2, 1);
+wt({'Mean Aggregate'}, excelPath, 'Aggregate', 1, 2);
+wt(means, excelPath, 'Aggregate', 2, 2);
 
 if ispc
     RemoveSheet123(excelPath);
 end
 
 
-function compositeCol = writegrouptoexcel(excelPath, groupName, fileNames, lag, includeNonFiring)
+function [compositeCol, meanCol] = writegrouptoexcel(excelPath, groupName, fileNames, lag, includeNonFiring)
 % WRITEGROUPTOEXCEL Calculates the STTC array for a set of movies given by
 % fileNames and writes it to a tab specified by groupName in the Excel file
 % specified by excelPath. It writes the STTC array for each movie as a
@@ -130,9 +135,10 @@ if numel(fileNames) > 1
     end
     
     currRow = 5+size(sttcMean,1);
+    
     %write sttcArr as column
-    sttcMeanCol = arr2column(sttcMean);
-    wt(sttcMeanCol, excelPath, groupName, currRow, currCol);
+    meanCol = arr2column(sttcMean);
+    wt(meanCol, excelPath, groupName, currRow, currCol);
 end
 
 
@@ -144,11 +150,13 @@ writetable(table(content), file, 'Sheet',sheet,'Range',range,'WriteVariableNames
 
 function column = arr2column(arr)
 % ARR2COLUMN Converts a nxn matrix into a n*(n+1)/2 x 1 column vector using
-% the upper triangular portion of the array excluding the diagonal.
+% the upper triangular portion of the array excluding the diagonal. Removes
+% any NaN.
 column = [];
 for col = 1:size(arr,2)
     column = vertcat(column,arr(1:col-1,col));
 end
+column(isnan(column)) = [];
 
 
 function cr = nn2an(row, col)
