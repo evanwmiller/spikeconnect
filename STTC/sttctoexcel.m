@@ -99,47 +99,44 @@ for iFile = 1:numel(fileNames)
     currCol = currCol + 3 + size(sttcArr,2);
 end
 
-%write composite and mean if more than one movie
-if numel(fileNames) > 1
-    wt({[groupName 'composite']}, excelPath, groupName, 1, currCol);
-    %label ROI row/columns for heatmap
-    wt({'ROI'}, excelPath, groupName, 2, currCol);
-    wt(1:size(groupSttcArr,2), excelPath, groupName, 2, currCol+1);
-    wt((1:size(groupSttcArr,2))', excelPath, groupName, 3, currCol);
-    
-    %write sttcMean excluding diagonal
-    for iCol = 1:size(groupSttcArr,2)
-        wt(groupSttcArr(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
-    end
-    
-    currRow = 5+size(groupSttcArr,1);
-    
-    %write sttc as column
-    compositeCol = arr2column(groupSttcArr);
-    wt(compositeCol, excelPath, groupName, currRow, currCol);
-    
-    %move over to right
-    currCol = currCol + 3 + size(sttcArr,2);
-    sttcMean = sttcSum ./ countSum;
-    sttcMean(isinf(sttcMean)) = NaN;
-    
-    wt({'Mean'}, excelPath, groupName, 1, currCol);
-    %label ROI row/columns for heatmap
-    wt({'ROI'}, excelPath, groupName, 2, currCol);
-    wt(1:size(sttcMean,2), excelPath, groupName, 2, currCol+1);
-    wt((1:size(sttcMean,2))', excelPath, groupName, 3, currCol);
-   
-    %write sttcMean excluding diagonal
-    for iCol = 1:size(sttcMean,2)
-        wt(sttcMean(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
-    end
-    
-    currRow = 5+size(sttcMean,1);
-    
-    %write sttcArr as column
-    meanCol = arr2column(sttcMean);
-    wt(meanCol, excelPath, groupName, currRow, currCol);
+wt({[groupName 'composite']}, excelPath, groupName, 1, currCol);
+%label ROI row/columns
+wt({'ROI'}, excelPath, groupName, 2, currCol);
+wt(1:size(groupSttcArr,2), excelPath, groupName, 2, currCol+1);
+wt((1:size(groupSttcArr,2))', excelPath, groupName, 3, currCol);
+
+%write composite STTC excluding diagonal
+for iCol = 1:size(groupSttcArr,2)
+    wt(groupSttcArr(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
 end
+
+currRow = 5+size(groupSttcArr,1);
+
+%write sttc as column
+compositeCol = arr2column(groupSttcArr);
+wt(compositeCol, excelPath, groupName, currRow, currCol);
+
+%move over to right
+currCol = currCol + 3 + size(sttcArr,2);
+sttcMean = sttcSum ./ countSum;
+sttcMean(isinf(sttcMean)) = NaN;
+
+wt({'Mean'}, excelPath, groupName, 1, currCol);
+%label ROI row/columns
+wt({'ROI'}, excelPath, groupName, 2, currCol);
+wt(1:size(sttcMean,2), excelPath, groupName, 2, currCol+1);
+wt((1:size(sttcMean,2))', excelPath, groupName, 3, currCol);
+
+%write sttcMean excluding diagonal
+for iCol = 1:size(sttcMean,2)
+    wt(sttcMean(1:iCol-1,iCol), excelPath, groupName, 3, currCol+iCol);
+end
+
+currRow = 5+size(sttcMean,1);
+
+%write sttcArr as column
+meanCol = arr2column(sttcMean);
+wt(meanCol, excelPath, groupName, currRow, currCol);
 
 
 function wt(content,file,sheet,row, col)
