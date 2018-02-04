@@ -1,8 +1,8 @@
 function varargout = labelroi(varargin)
-%LABELROI GUI to classify spikes. Select the root directory of a drive that
-%contains spike files. If the program has been initialized in this
-%directory before, resume operation. Otherwise, create an index of all the
-%spike files and display spikes to be classified. 
+%LABELROI GUI to classify cells as DGC, CA1, CA3, or inhibitory. After the
+%user selects a folder, it will looks for a label-*.png file which has the
+%circled ROIs. Then, after the user classifies each ROI, the results are
+%saved into the corresponding roi-*.mat file under "assignments".
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -39,7 +39,7 @@ h.output = hObject;
 movegui(gcf,'center')
 %set instructions
 instructions = sprintf(['Instructions: ' ...
-                'Browse for folder containing a label- file. '...
+                'Browse for folder containing a label-*.png file. '...
                 ' Classify the indicated ROI by using the number keys '...
                 'or by clicking on the buttons. Assignments will be saved '...
                 'when the GUI is closed or when user selects a new folder.']);
