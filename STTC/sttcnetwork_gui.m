@@ -162,13 +162,11 @@ end
 defaultDir = fullfile(handles.baseDir,'..','*.xlsx');
 [excelName, excelDir] = uiputfile(defaultDir, 'Specify Excel File Path');
 if isequal(excelDir,0); return; end;
-[~, name, ~] = fileparts(excelName);
-excelPath = [excelDir name '-withnonfiring.xlsx'];
-disp('Please wait...');
 
-sttctoexcel(handles.baseDir,excelPath,handles.sttcMaxLagMs, true);
-excelPath = [excelDir name '-withoutnonfiring.xlsx'];
-sttctoexcel(handles.baseDir,excelPath,handles.sttcMaxLagMs, false);
+disp('Please wait...');
+excelPath = [excelDir excelName];
+includeNonFiring = false;
+sttctoexcel(handles.baseDir, excelPath, handles.sttcMaxLagMs, includeNonFiring);
 
 disp('Excel export completed.');
 

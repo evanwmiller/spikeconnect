@@ -19,7 +19,7 @@ function sttctoexcel(baseDir, excelPath, sttcMaxLagMs, includeNonFiring)
 % Author: Patrick Zhang
 
 if nargin < 4
-    includeNonFiring = true;
+    includeNonFiring = false;
 end
 
 spikeFileStruct = findgroups(baseDir);
