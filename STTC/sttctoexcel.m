@@ -26,28 +26,75 @@ spikeFileStruct = findgroups(baseDir);
 groups = sort(fieldnames(spikeFileStruct));
 composites = [];
 means = [];
+compositeByType = containers.Map('KeyType','char','ValueType','Any');
+
 for iGroup = 1:numel(groups)
     groupName = groups{iGroup};
     fileNames = spikeFileStruct.(groupName);
-    [composite, mean] = writegrouptoexcel(excelPath, ...
+    [compositeCol, meanCol, groupSttcArr, sttcMean] = writegrouptoexcel(...
+            excelPath, ...
             groupName, ...
             fileNames, ...
             sttcMaxLagMs, ...
             includeNonFiring);
-    composites = vertcat(composites, composite);
-    means = vertcat(means, mean);
+    composites = vertcat(composites, compositeCol);
+    means = vertcat(means, meanCol);
+    
+    dir = fileparts(fileNames{1});
+    roiFile = currentdir(dir, '^roi-.*.mat$');
+
+    if ~isempty(roiFile)
+        % Throws warning if assignments haven't been made yet.
+        load([dir filesep roiFile{1}],'assignments');
+    end
+    
+    if exist('assignments','var')
+        for i = 1:numel(assignments)
+            for j = i+1:numel(assignments)
+                if ~isnan(groupSttcArr(i,j))
+                    key = sort({assignments{i}, assignments{j}});
+                    key = [key{1} key{2}];
+                    if ~compositeByType.isKey(key)
+                        compositeByType(key) = {};
+                    end
+                    curr = compositeByType(key);
+                    curr{end+1} = groupSttcArr(i,j);
+                    compositeByType(key) = curr;
+                end
+            end
+        end
+    end
 end
+
 wt({'Composite Aggregate'}, excelPath, 'Aggregate', 1, 1);
 wt(composites, excelPath, 'Aggregate', 2, 1);
 wt({'Mean Aggregate'}, excelPath, 'Aggregate', 1, 2);
 wt(means, excelPath, 'Aggregate', 2, 2);
+
+% Output composite aggregate grouped by the types of the two cells.
+if compositeByType.length > 0
+    types = {'DGC','Inhib','CA1','CA3'};
+    currentColumn = 4;
+    for i = 1:numel(types)
+        for j = i:numel(types)
+            wt({[types{i}  '-' types{j}]}, excelPath, 'Aggregate', 1, currentColumn);
+            key = sort({types{i}, types{j}});
+            key = [key{1} key{2}];
+            if compositeByType.isKey(key)
+                wt(compositeByType(key)', excelPath, 'Aggregate', 2, currentColumn);
+            end
+            currentColumn = currentColumn + 1;
+        end
+    end
+end
 
 if ispc
     RemoveSheet123(excelPath);
 end
 
 
-function [compositeCol, meanCol] = writegrouptoexcel(excelPath, groupName, fileNames, lag, includeNonFiring)
+function [compositeCol, meanCol, groupSttcArr, sttcMean] = ...
+    writegrouptoexcel(excelPath, groupName, fileNames, lag, includeNonFiring)
 % WRITEGROUPTOEXCEL Calculates the STTC array for a set of movies given by
 % fileNames and writes it to a tab specified by groupName in the Excel file
 % specified by excelPath. It writes the STTC array for each movie as a
