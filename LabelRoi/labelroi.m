@@ -45,8 +45,8 @@ instructions = sprintf(['Instructions: ' ...
                 'when the GUI is closed or when user selects a new folder.']);
 set(h.instructionsText,'String',instructions);
 
-h.neuronTypes = {'DGC','Inhib','CA1','CA3'};
-h.buttons = {h.dgcButton, h.inhibButton, h.ca1Button, h.ca3Button};
+h.neuronTypes = {'DGC','Inhib','CA1','CA3','Unknown'};
+h.buttons = {h.dgcButton, h.inhibButton, h.ca1Button, h.ca3Button, h.unknownButton};
 set(h.statusText,'FontSize',16,'FontWeight','Bold');
 % Update h structure
 guidata(hObject, h);
@@ -186,6 +186,13 @@ function ca3Button_Callback(hObject, eventdata, h)
 if ~isfield(h,'baseDir'); return; end;
 assigncurrentroi(hObject, h,4);
 
+% --- Executes on button press in unknownButton.
+function unknownButton_Callback(hObject, eventdata, h)
+% hObject    handle to unknownButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(h, 'baseDir'); return; end;
+assigncurrentroi(hObject, h, 5);
 
 % --- Executes on key press with focus on figure1 and none of its controls.
 function figure1_KeyPressFcn(hObject, eventdata, h)
@@ -204,6 +211,8 @@ switch eventdata.Key
         assigncurrentroi(hObject,h,3);
     case '4'
         assigncurrentroi(hObject,h,4);
+    case '5'
+        assigncurrentroi(hObject,h,5);
 end
 
 
