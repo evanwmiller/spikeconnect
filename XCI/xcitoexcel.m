@@ -67,7 +67,7 @@ wt(getcelltypenames(), excelPath, tabName, 26, 2);
 wt(getcelltypenames()', excelPath, tabName, 27, 1);
 wt(islandResults.connectivityFactor, excelPath, tabName, 27, 2);
 
-wt({'XCI. Column labels are trigger cell and row labels are receiving cell. If the value is negative, it goes the other way. If the value is nan in upper righ triangle, then the cell is either nonfiring or did not meet minimum frequency.'}, ...
+wt({'XCI. Column labels are trigger cell and row labels are receiving cell. If the value is negative, it goes the other way. If the value is missing in upper right triangle, then the cell is either nonfiring or did not meet minimum frequency.'}, ...
     excelPath, tabName, 33, 1);
 wt(1:nRoi, excelPath, tabName, 34, 2);
 wt((1:nRoi)', excelPath, tabName, 35, 1);
