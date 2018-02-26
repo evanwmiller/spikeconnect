@@ -31,7 +31,6 @@ movegui(gcf,'center')
 
 %DEFAULT VALUES FOR PARAMETERS
 handles.sttcMaxLagMs = str2double(get(handles.sttcMaxLagEdit,'String'));
-handles.xcorrMaxLagMs = str2double(get(handles.xcorrMaxLagEdit,'String'));
 handles.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
 
@@ -205,16 +204,6 @@ guidata(hObject,handles);
 %        str2double(get(hObject,'String')) returns contents of sttcMaxLagEdit as a double
 
 
-function xcorrMaxLagEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to xcorrMaxLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.xcorrMaxLagMs = str2double(get(hObject,'String'));
-guidata(hObject,handles);
-% Hints: get(hObject,'String') returns contents of xcorrMaxLagEdit as text
-%        str2double(get(hObject,'String')) returns contents of xcorrMaxLagEdit as a double
-
-
 function monoMinLagEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to monoMinLagEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -266,14 +255,10 @@ for iField = 1:numel(fieldNames)
 end
 
 function plotdetails(handles, roi1, roi2)
-% Plots spikes if a file is selected. Plots crosscorrelogram if a group is
-% selected.
+% Plots spikes if a file is selected. Do nothing if group is selected.
 [~,~,ext] = fileparts(handles.selection);
 fileGroup = getfilegroup(handles);
-if isempty(ext) %selected group
-    plotxcorr(fileGroup,roi1,roi2,handles.xcorrMaxLagMs);
-    plotxcorrtotal(fileGroup, handles.xcorrMaxLagMs);
-else
+if ~isempty(ext) % selected file
     plotspikes(fileGroup{1},roi1,roi2);
 end
 
@@ -324,19 +309,6 @@ end
 % --- Executes during object creation, after setting all properties.
 function sttcMaxLagEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to sttcMaxLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function xcorrMaxLagEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to xcorrMaxLagEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
