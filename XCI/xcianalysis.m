@@ -1,5 +1,7 @@
 function results = xcianalysis(spikeFileStruct, params)
-%XCIANALYSIS Summary of this function goes here
+%XCIANALYSIS Calculates XCI for each of the islands in spikeFileStruct and
+%calculated connectivity factors, which is a value associated with the
+%observed likelihood of a connection between cell types. See XCI_GUI.
 %   
 %   -----------------------------------------------------------------------
 %   Inputs:
@@ -17,10 +19,30 @@ function results = xcianalysis(spikeFileStruct, params)
 %   and either 'include', 'require', or 'exclude'.
 %   -----------------------------------------------------------------------
 %   Output struct fields:
-%   1. For each fieldname in spikeFileStruct, there's a corresponding field
-%   in results for the xci calculations for that island, consisting of the
-%   folloi
-%   2. Aggregate:
+%   1. islandResults: cell array of result structs for each island in
+%   spikeFileStruct. Each struct in islandResults has the following fields:
+%       a. name: name of the island.
+%       b. xciArr: xciArr(a,b) is the xci between roi A and B. If xciArr is
+%       nan, then the cell did not meet the minimum frequency requirement.
+%       If the value is positive, then a->b is assumed. Otherwise, b->a is
+%       assumed.
+%       c. edgeCount: edgeCount(cell type number, roi) is the number of
+%       edges (connections with xci over xciThreshold) from roi to that
+%       cell type.
+%       d. typeCount: typeCount(cell type number) is the number of cells of
+%       that type.
+%       e. normalizedEdgeCount: edgeCount, but with the counts normalized
+%       by the number of the receiving cell.
+%       f. sumNormalizedEdgeCountByType: group roi's with the same cell
+%       type in normalizedEdgeCount.
+%       g. connectivityFactor: average normalized edge count by type.
+%       h. xciArrGroupedByType: xciArr, but organized into cell type ->
+%       cell type.
+%   2. Aggregate: combined statistics about all islands that meet the
+%   filter criteria. Has the following fields:
+%       a. params: input parameters
+%       b. typeCount: combined type count
+%       c. connectivityFactor: combined connectivity factor
 %   -----------------------------------------------------------------------
 
 spikeFileDirs = fieldnames(spikeFileStruct);
@@ -59,6 +81,8 @@ results.params = params;
 
 
 function match = matchesFilter(islandResults, filter)
+% MATCHESFILTER Returns whether or not the island has the required cell
+% types. See XCIANALYSIS for what fields filter should have.
 typeCount = islandResults.typeCount;
 filterArr = nan(1, 5);
 
@@ -77,6 +101,8 @@ match = all(typeCount(filterArr == 1) > 0) ...
     
 
 function islandResults = islandanalysis(fileGroup, params)
+% ISLANDANALYSIS Returns xci results for the island represented by
+% fileGroup. See XCIANALYSIS.
 dir = fileparts(fileGroup{1});
 roiFile = currentdir(dir, '^roi-.*.mat$');
 load([dir filesep roiFile{1}],'assignments');

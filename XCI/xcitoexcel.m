@@ -71,6 +71,8 @@ wt({'XCI. Column labels are trigger cell and row labels are receiving cell. If t
     excelPath, tabName, 33, 1);
 wt(1:nRoi, excelPath, tabName, 34, 2);
 wt((1:nRoi)', excelPath, tabName, 35, 1);
+% report negative so that trigger is column label.
+% xciArr has format of (trigger, receiving).
 wt(-islandResults.xciArr, excelPath, tabName, 35, 2);
 
 wt({'XCI grouped by trigger and receiving cell type.'}, excelPath, tabName, 41, 1);

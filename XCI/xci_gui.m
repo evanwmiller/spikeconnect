@@ -1,5 +1,8 @@
 function varargout = xci_gui(varargin)
-% XCI_GUI
+% XCI_GUI GUI used for batch XCI analysis. Use update to view the histogram
+% of xci values and threshold to set minimum xci to be considered a
+% connection. All cells that have a frequency lower than minFreq are
+% considered nonfiring.
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

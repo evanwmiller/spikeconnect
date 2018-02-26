@@ -1,6 +1,10 @@
 function xciArr = calcxciarr(fileGroup, params)
-%CALCXCIARR Summary of this function goes here
-%   Detailed explanation goes here
+%CALCXCIARR Calculates the XCI (cross-correlation connection index) for the
+%island represented by fileGroup. 
+%
+% XCI between cell A and cell B is the fraction of spikes of cell A that has 
+% a corresponding spike in cell B in the monosynaptic lag range.
+
 spikeCountArr = countspikes(fileGroup);
 nRoi = numel(spikeCountArr);
 
@@ -22,6 +26,9 @@ end
 
 
 function [xcorrArr, lagArrMs, seconds] = calcxcorr(fileGroup, roi1, roi2, params)
+% CALCXCORR Adaptation of xcorr to work with multiple files and values
+% reported in frames/milliseconds. Returns lag is ms and corresponding
+% xcorr value. Also reports the total length of the movie in seconds.
 maxLagMs = params.monoMaxLagMs;
 xcorrArr = [];
 totalFrames = 0;
