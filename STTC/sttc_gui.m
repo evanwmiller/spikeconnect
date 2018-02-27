@@ -1,12 +1,12 @@
-function varargout = sttcnetwork_gui(varargin)
-% STTCNETWORK_GUI
+function varargout = sttc_gui(varargin)
+% STTC_GUI
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @sttcnetwork_gui_OpeningFcn, ...
-                   'gui_OutputFcn',  @sttcnetwork_gui_OutputFcn, ...
+                   'gui_OpeningFcn', @sttc_gui_OpeningFcn, ...
+                   'gui_OutputFcn',  @sttc_gui_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -20,18 +20,17 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before sttcnetwork_gui is made visible.
-function sttcnetwork_gui_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before sttc_gui is made visible.
+function sttc_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % OPENINGFCN Sets default values and centers the application window.
 
-% Choose default command line output for sttcnetwork_gui
+% Choose default command line output for sttc_gui
 handles.output = hObject;
 
 movegui(gcf,'center')
 
 %DEFAULT VALUES FOR PARAMETERS
 handles.sttcMaxLagMs = str2double(get(handles.sttcMaxLagEdit,'String'));
-handles.xcorrMaxLagMs = str2double(get(handles.xcorrMaxLagEdit,'String'));
 handles.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
 
@@ -82,16 +81,21 @@ end
 % Embeds the heatmap into the figure
 [handles.fileGroup,handles.selection] = getfilegroup(handles);
 sttcArr = calcsttcarr(handles.fileGroup, handles.sttcMaxLagMs);
-% omit NaN from the heat map.
+
+% represent NaN as 1.05, which is an impossible STTC value.
 sttcArr(isnan(sttcArr)) = 1.05;
 axes(handles.figAxes);
-colormap([jet;[1,1,1]]); 
+
+% add [1,1,1] to the colormap so highest values (representing NaN) show up
+% white in the heatmap
+colormap([parula;[1,1,1]]); 
 image(sttcArr , 'CDataMapping','scaled');
 cbh = colorbar;
 ylabel(cbh , 'STTC score')
 axis square;
 % Color bar is set to 0 to 1.05. STTC range is 0 to 1, and the bottom left
-% triangle is set to 1.05, so it'll show up as white.
+% triangle is set to 1.05, so it'll show up as white. Any STTC involving a
+% nonfiring cell will also show in white.
 caxis([0 1.05]);
 titleText = strrep(handles.selection,'_',' ');
 title(titleText);
@@ -135,19 +139,6 @@ end
 fileGroup = getfilegroup(handles);
 plotrois(fileGroup{1});
 
-
-% --- Executes on button press in networkButton.
-function networkButton_Callback(hObject, eventdata, handles)
-% hObject    handle to networkButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if ~isfield(handles,'spikeFileStruct')
-    errordlg('Please select a folder first.');
-    return;
-end
-fileGroup = getfilegroup(handles);
-plotnetwork(fileGroup, handles.xcorrMaxLagMs, ...
-    handles.monoMinLagMs, handles.monoMaxLagMs);
 
 % --- Executes on button press in exportExcelButton.
 function exportExcelButton_Callback(hObject, eventdata, handles)
@@ -213,16 +204,6 @@ guidata(hObject,handles);
 %        str2double(get(hObject,'String')) returns contents of sttcMaxLagEdit as a double
 
 
-function xcorrMaxLagEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to xcorrMaxLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.xcorrMaxLagMs = str2double(get(hObject,'String'));
-guidata(hObject,handles);
-% Hints: get(hObject,'String') returns contents of xcorrMaxLagEdit as text
-%        str2double(get(hObject,'String')) returns contents of xcorrMaxLagEdit as a double
-
-
 function monoMinLagEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to monoMinLagEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -274,14 +255,10 @@ for iField = 1:numel(fieldNames)
 end
 
 function plotdetails(handles, roi1, roi2)
-% Plots spikes if a file is selected. Plots crosscorrelogram if a group is
-% selected.
+% Plots spikes if a file is selected. Do nothing if group is selected.
 [~,~,ext] = fileparts(handles.selection);
 fileGroup = getfilegroup(handles);
-if isempty(ext) %selected group
-    plotxcorr(fileGroup,roi1,roi2,handles.xcorrMaxLagMs);
-    plotxcorrtotal(fileGroup, handles.xcorrMaxLagMs);
-else
+if ~isempty(ext) % selected file
     plotspikes(fileGroup{1},roi1,roi2);
 end
 
@@ -296,7 +273,7 @@ rearmFactor = str2num(selectedStr);
 % ==================== UNUSED GUIDE FUNCTIONS ==================== %
 
 % --- Outputs from this function are returned to the command line.
-function varargout = sttcnetwork_gui_OutputFcn(hObject, eventdata, handles) 
+function varargout = sttc_gui_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -332,19 +309,6 @@ end
 % --- Executes during object creation, after setting all properties.
 function sttcMaxLagEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to sttcMaxLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function xcorrMaxLagEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to xcorrMaxLagEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
