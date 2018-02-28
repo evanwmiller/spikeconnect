@@ -143,7 +143,9 @@ end
 normalizedEdgeCount = zeros(size(edgeCount));
 for i = 1 : numel(typeCount) % 5 rows
     numOfReceivingCellType = typeCount(i);
-    normalizedEdgeCount(i,:) = edgeCount(i,:) / numOfReceivingCellType;
+    if numOfReceivingCellType ~= 0
+        normalizedEdgeCount(i,:) = edgeCount(i,:) / numOfReceivingCellType;
+    end
 end
 
 % combine normalized counts based on trigger cell type
