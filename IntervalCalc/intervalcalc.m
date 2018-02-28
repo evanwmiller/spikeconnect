@@ -104,13 +104,13 @@ guidata(hObject, handles);
 
 
 
-function averages = calculateSpikeTimes(handles) %means for intervals saved in matrix averages
+function averages = calculatetimes(handles) %means for intervals saved in matrix averages
     averages = []; %initializing empty matrix
     for iSpikeFile = 1:numel(handles.spikeFilePaths) %for every spike file in the path specified
         load(handles.spikeFilePaths{iSpikeFile} , 'spikeDataArray'); %load the file
         for i = 1:numel(spikeDataArray) %for every cell in spikeDataArray in the file
-            spiketimes = spikeDataArray{i}.rasterSpikeTimes; %assign spiketimes to the values found in rasterSpikeTimes
-            for spike = 1:numel(spiketimes) %for every spike time
+            spikeTimes = spikeDataArray{i}.rasterSpikeTimes; %assign spiketimes to the values found in rasterSpikeTimes
+            for spike = 1:numel(spikeTimes) %for every spike time
                 data = []; %initialize matrix used to hold dff values for individual intervals
                 start = spike - handles.before; %set interval start
                 if start < 1
@@ -175,6 +175,6 @@ if isequal(excelDir,0); return; end;
 excelPath = [excelDir excelName];
 guidata(hObject, handles);
 
-averages = calculateSpikeTimes(handles);
+averages = calculatetimes(handles);
 saveavgs(handles.baseDir);
 writetable(table(averages), excelPath);
