@@ -22,22 +22,24 @@ function results = xcianalysis(spikeFileStruct, params)
 %   1. islandResults: cell array of result structs for each island in
 %   spikeFileStruct. Each struct in islandResults has the following fields:
 %       a. name: name of the island.
-%       b. xciArr: xciArr(a,b) is the xci between roi A and B. If xciArr is
+%       b. assignments: assignment{roi} is the cell type of the roi.
+%       c. xciArr: xciArr(a,b) is the xci between roi A and B. If xciArr is
 %       nan, then the cell did not meet the minimum frequency requirement.
 %       If the value is positive, then a->b is assumed. Otherwise, b->a is
 %       assumed.
-%       c. edgeCount: edgeCount(cell type number, roi) is the number of
+%       d. edgeCount: edgeCount(cell type number, roi) is the number of
 %       edges (connections with xci over xciThreshold) from roi to that
 %       cell type.
-%       d. typeCount: typeCount(cell type number) is the number of cells of
+%       e. typeCount: typeCount(cell type number) is the number of cells of
 %       that type.
-%       e. normalizedEdgeCount: edgeCount, but with the counts normalized
+%       f. normalizedEdgeCount: edgeCount, but with the counts normalized
 %       by the number of the receiving cell.
-%       f. sumNormalizedEdgeCountByType: group roi's with the same cell
+%       g. sumNormalizedEdgeCountByType: group roi's with the same cell
 %       type in normalizedEdgeCount.
-%       g. connectivityFactor: average normalized edge count by type.
-%       h. xciArrGroupedByType: xciArr, but organized into cell type ->
-%       cell type.
+%       h. connectivityFactor: average normalized edge count by type.
+%       i. xciArrGroupedByType: xciArr, but organized into cell type ->
+%       cell type. 5x5 cell array, where xciArrGroupedByType(x,y) is the
+%       xci's for x->y.
 %   2. Aggregate: combined statistics about all islands that meet the
 %   filter criteria. Has the following fields:
 %       a. params: input parameters
@@ -165,7 +167,7 @@ end
 % group  xciArr by trigger and receiving cell type.
 % xciArr (as is) is (trigger, receiving). If negative, the connection goes 
 % the opposite direction.
-xciArrGroupedByType = cell(25, 1);
+xciArrGroupedByType = cell(5, 5);
 for row = 1:size(xciArr,1)
     for col = (row+1):size(xciArr,2)
         if xciArr(row,col) > 0
@@ -177,11 +179,12 @@ for row = 1:size(xciArr,1)
         end
         
         if ~isnan(xciArr(row,col))
-            xciArrGroupedByType{(trigger-1)*5+receiver}(end+1) = abs(xciArr(row,col));
+            xciArrGroupedByType{trigger, receiver}(end+1) = abs(xciArr(row,col));
         end
     end
 end
 
+islandResults.assignments = assignments;
 islandResults.xciArr = xciArr;
 islandResults.edgeCount = edgeCount;
 islandResults.typeCount = typeCount;

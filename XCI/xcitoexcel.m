@@ -36,6 +36,10 @@ nr=wt(getcelltypenames(), excelPath, tabName, nr, 2);
 wt(getcelltypenames()', excelPath, tabName, nr, 1);
 nr=wt(aggregate.connectivityFactor(1:4,1:4), excelPath, tabName, nr, 2);
 
+nr=wt({'Connectivity factors organized by connection'}, excelPath, tabName, nr+2, 1);
+nr=wt(getcelltocellconnections(), excelPath, tabName, nr, 2);
+nr=wt(reshape(aggregate.connectivityFactor(1:4, 1:4), 1, 16), excelPath, tabName, nr, 2);
+
 for i = 1:numel(xciResults.islandResults)
     writeislandresults(xciResults.islandResults{i}, excelPath);
 end
@@ -48,7 +52,9 @@ nr = 1; % next row
 
 nr=wt({['Number of edges to each type of cell. '...
     'Column labels are the number of the triggering cell. '...
+    'ROI type is labeled above the roi # on the column label. ' ...
     'Row labels are type of receiving cell.']}, excelPath, tabName, nr, 1);
+nr=wt(islandResults.assignments, excelPath, tabName, nr, 2);
 nr=wt(1:nRoi, excelPath, tabName, nr, 2);
 wt(getcelltypenames()', excelPath, tabName, 3, 1);
 nr=wt(islandResults.edgeCount(1:4,:), excelPath, tabName, nr, 2);
@@ -59,6 +65,7 @@ nr=wt(islandResults.typeCount(1:4), excelPath, tabName, nr,2);
 
 nr=wt({'Normalized edge count. This is the number of edges divided by the total number of the receiving cell.'}, ...
     excelPath, tabName, nr+1, 1);
+nr=wt(islandResults.assignments, excelPath, tabName, nr, 2);
 nr=wt(1:nRoi, excelPath, tabName, nr, 2);
 wt(getcelltypenames()', excelPath, tabName, nr, 1);
 nr=wt(islandResults.normalizedEdgeCount(1:4,:), excelPath, tabName, nr, 2);
@@ -70,20 +77,29 @@ wt(getcelltypenames()', excelPath, tabName, nr, 1);
 nr=wt(islandResults.connectivityFactor(1:4,1:4), excelPath, tabName, nr, 2);
 
 nr=wt({'Connectivity factors organized by connection type.'}, excelPath, tabName, nr+1,1);
-nr=wt(getcelltocellconnections(), excelPath, tabName, nr, 1);
-nr=wt(reshape(islandResults.connectivityFactor(1:4,1:4)', 1, 16), excelPath, tabName, nr, 1);
+nr=wt(getcelltocellconnections(), excelPath, tabName, nr, 2);
+nr=wt(reshape(islandResults.connectivityFactor(1:4,1:4), 1, 16), excelPath, tabName, nr, 2);
 
 nr=wt({'XCI. Column labels are trigger cell and row labels are receiving cell. If the value is negative, it goes the other way. If the value is missing in upper right triangle, then the cell is either nonfiring or did not meet minimum frequency.'}, ...
     excelPath, tabName, nr+1, 1);
-nr=wt(1:nRoi, excelPath, tabName, nr, 2);
-wt((1:nRoi)', excelPath, tabName, nr, 1);
+nr=wt(islandResults.assignments, excelPath, tabName, nr, 3);
+nr=wt(1:nRoi, excelPath, tabName, nr, 3);
+wt(islandResults.assignments', excelPath, tabName, nr, 1);
+wt((1:nRoi)', excelPath, tabName, nr, 2);
 % report negative so that trigger is column label.
 % xciArr has format of (trigger, receiving).
-nr=wt(-islandResults.xciArr, excelPath, tabName, nr, 2);
+nr=wt(-islandResults.xciArr, excelPath, tabName, nr, 3);
 
 nr=wt({'XCI grouped by trigger and receiving cell type.'}, excelPath, tabName, nr+1, 1);
-nr=wt(getcelltocellconnections(), excelPath, tabName, nr, 1);
-nr=wt(islandResults.xciArrGroupedByType', excelPath, tabName, nr, 2);
+nr=wt(getcelltocellconnections(), excelPath, tabName, nr, 2);
+for trigger = 1:4
+    for receiver = 1:4
+        wt(islandResults.xciArrGroupedByType{trigger,receiver}', ...
+            excelPath, tabName, nr, (trigger-1) * 4 + receiver + 1);
+    end
+end
+
+nr = nr + 1;
 
 
 function header = getcelltypenames()
