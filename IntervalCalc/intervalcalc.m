@@ -104,28 +104,43 @@ guidata(hObject, handles);
 
 
 
-function averages = calculatetimes(handles) %means for intervals saved in matrix averages
-    averages = []; %initializing empty matrix
-    for iSpikeFile = 1:numel(handles.spikeFilePaths) %for every spike file in the path specified
-        load(handles.spikeFilePaths{iSpikeFile} , 'spikeDataArray'); %load the file
-        for i = 1:numel(spikeDataArray) %for every cell in spikeDataArray in the file
-            spikeTimes = spikeDataArray{i}.rasterSpikeTimes; %assign spiketimes to the values found in rasterSpikeTimes
-            for spike = 1:numel(spikeTimes) %for every spike time
-                data = []; %initialize matrix used to hold dff values for individual intervals
-                start = spike - handles.before; %set interval start
+function [interval, means] = calculatetimes(handles) 
+    interval = [];
+    for iSpikeFile = 1:numel(handles.spikeFilePaths) 
+        load(handles.spikeFilePaths{iSpikeFile} , 'spikeDataArray'); 
+        intCell = {};
+        meanCell = {};
+        for i = 1:numel(spikeDataArray)
+            intArray = [];
+            spikeTimes = spikeDataArray{i}.rasterSpikeTimes; 
+            for spike = spikeTimes
+                data = []; 
+                start = spike - handles.before; 
                 if start < 1
-                    start = 1; %make sure no zero/negative start values
+                    continue; 
                 end
-                final = spike + handles.after; %set interval end
+                final = spike + handles.after; 
                 if final > numel(spikeDataArray{i}.dffTrace)
-                    final = numel(spikeDataArray{i}.dffTrace); %make end doesn't exceed dffTrace size
+                    continue; 
                 end
-                for int = (start : 1 : final) %for every frame in interval
-                    data = [data spikeDataArray{i}.dffTrace(int)]; %add dff value to the data matrix
+                for int = (start : 1 : final) 
+                    data = [data spikeDataArray{i}.dffTrace(int)]; 
                 end
-                avg = mean(data); %find the mean of data matrix
-                averages = [averages avg]; %add mean to the averages matrix
+                intArray = cat(1, intArray, data); 
             end
+            intCell{i} = intArray;
+            length = handles.after + handles.before;
+            interval = intCell;
+            if numel(intCell{i}) > 1
+                avg = [];
+                for k = 1:length
+                    value = mean(intCell{i}(:,k));
+                    avg = [avg value];
+                    
+                end
+                meanCell{i} = avg;
+            end
+            means = meanCell;
         end
     end
 
@@ -167,14 +182,7 @@ function exportbutton_Callback(hObject, eventdata, handles)
 handles.before = str2double(get(handles.before_box , 'String'));
 handles.after = str2double(get(handles.after_box , 'String'));
 
-defaultDir = fullfile(handles.baseDir,'..','*.xlsx');
-[excelName, excelDir] = uiputfile(defaultDir, 'Specify Excel File Path');
-if isequal(excelDir,0); return; end;
+[intervalTrace, meanTrace] = calculatetimes(handles);
 
-
-excelPath = [excelDir excelName];
-guidata(hObject, handles);
-
-averages = calculatetimes(handles);
-saveavgs(handles.baseDir);
-writetable(table(averages), excelPath);
+saveDir = [handles.baseDir '\meantrace.mat']; 
+save(saveDir, 'intervalTrace', 'meanTrace'); 
