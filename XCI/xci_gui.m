@@ -41,6 +41,7 @@ handles.params.filter.dgc = 'include';
 handles.params.filter.inhib = 'include';
 handles.params.filter.ca1 = 'include';
 handles.params.filter.ca3 = 'include';
+handles.numBins = str2double(get(handles.numBinsEdit,'String'));
 handles.changed = true;
 
 % Update handles structure
@@ -87,13 +88,34 @@ handles.changed = false;
 
 axes(handles.figAxes);
 
-[dist, edges] = histcounts(handles.results.aggregate.xci, 20);
+[dist, edges] = histcounts(handles.results.aggregate.xci, handles.numBins);
 centers = (edges(1:end-1) + edges(2:end))/2;
 bar(centers, dist);
 xlabel('XCI');
 ylabel('Count');
 
 guidata(hObject, handles);
+
+
+% --- Executes on button press in saveHistogramButton.
+function saveHistogramButton_Callback(hObject, eventdata, handles)
+% hObject    handle to saveHistogramButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'spikeFileStruct')
+    errordlg('Please select a folder first.');
+    return;
+end
+
+defaultDir = fullfile(handles.baseDir,'..','*.mat');
+[matName, matDir] = uiputfile(defaultDir, 'Specify File Path');
+if isequal(matDir,0); return; end;
+
+disp('Please wait...');
+matPath = [matDir matName];
+[dist, edges] = histcounts(handles.results.aggregate.xci, handles.numBins);
+save(matPath, 'dist', 'edges');
+disp('Save to .mat file complete');
 
 
 % --- Executes on button press in exportExcelButton.
@@ -147,6 +169,11 @@ handles.params.monoMaxLagMs = str2double(get(hObject,'String'));
 handles.changed = true;
 guidata(hObject, handles);
 
+
+function numBinsEdit_Callback(hObject, eventdata, handles)
+handles.numBins = str2double(get(hObject,'String'));
+handles.changed = true;
+guidata(hObject, handles);
 
 function includeDgcRadio_Callback(hObject, eventdata, handles)
 handles.params.filter.dgc = 'include';
@@ -282,3 +309,17 @@ function monoMaxLagEdit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes during object creation, afte r setting all properties.
+function numBinsEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to numBinsEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
