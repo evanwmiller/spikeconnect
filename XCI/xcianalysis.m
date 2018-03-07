@@ -47,6 +47,7 @@ function results = xcianalysis(spikeFileStruct, params)
 %       c. connectivityFactor: combined connectivity factor
 %   -----------------------------------------------------------------------
 
+disp('XCI analysis in progress...');
 spikeFileDirs = fieldnames(spikeFileStruct);
 
 sumNormalizedEdgeCountByType = zeros(5,5);
@@ -80,6 +81,7 @@ end
 results.aggregate.typeCount = typeCount;
 results.aggregate.connectivityFactor = connectivityFactor;
 results.params = params;
+disp('XCI analysis completed.');
 
 
 function match = matchesFilter(islandResults, filter)
