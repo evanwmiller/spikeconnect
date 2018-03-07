@@ -1,8 +1,11 @@
 % INTERVAL CALC 
 % Calculates average dff values over set intervals near spikes
-% Input: Before (int, in frames), After (int, in frames), Directory for
+% Input: Before (int), After (int), Directory for
 % analysis
-% Output: Excel file of averages
+% Before and after values indicate interval size
+% Time is expressed in frames
+% Output: meantrace.mat file containing dff trace for spike intervals and
+% mean trace
 
 
 
