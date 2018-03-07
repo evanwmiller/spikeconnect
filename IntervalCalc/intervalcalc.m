@@ -129,7 +129,7 @@ function [interval, means] = calculatetimes(handles)
                 intArray = cat(1, intArray, data); 
             end
             intCell{i} = intArray;
-            length = handles.after + handles.before;
+            length = handles.after + handles.before + 1;
             interval = intCell;
             if numel(intCell{i}) > 1
                 avg = [];
