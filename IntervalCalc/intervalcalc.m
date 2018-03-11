@@ -6,6 +6,13 @@
 % Time is expressed in frames
 % Output: meantrace.mat file containing dff trace for spike intervals and
 % mean trace
+% IntervalTrace: 1x2 cell containing ROI assignment and trace matrix
+% FOR MEANTRACE MATRIX: First column is ROI assignments:
+% 1 = DGC
+% 2 = Inhib
+% 3 = CA1
+% 4 = CA3
+% 5 = Unknown
 
 
 
@@ -102,48 +109,84 @@ if isempty(spikeFilePaths)
     return;
 end
 handles.spikeFilePaths = spikeFilePaths; %spikes-*.mat files
+handles.roiFilePaths = recursdir(baseDir , '^roi-.*.mat$'); 
 guidata(hObject, handles);
 
 
 
 
 function [interval, means] = calculatetimes(handles) 
+    rois = [];
+    for iRoiFile = 1:numel(handles.roiFilePaths) 
+        load(handles.roiFilePaths{iRoiFile} , 'assignments');
+        for i = 1:numel(assignments)
+            if strcmp(assignments{i}, 'DGC')
+                rois(i) = 1;
+            end
+            if strcmp(assignments{i}, 'Inhib')
+                rois(i) = 2;
+            end
+            if strcmp(assignments{i}, 'CA1')
+                rois(i) = 3;
+            end
+            if strcmp(assignments{i}, 'CA3')
+                rois(i) = 4;
+            end
+            if strcmp(assignments{i}, 'Unknown')
+                rois(i) = 5;
+            end
+        end
+    end
     interval = [];
     for iSpikeFile = 1:numel(handles.spikeFilePaths) 
         load(handles.spikeFilePaths{iSpikeFile} , 'spikeDataArray'); 
         intCell = {};
-        meanCell = {};
+        meanCell = [];
         for i = 1:numel(spikeDataArray)
             intArray = [];
             spikeTimes = spikeDataArray{i}.rasterSpikeTimes; 
-            for spike = spikeTimes
-                data = []; 
-                start = spike - handles.before; 
-                if start < 1
-                    continue; 
+            if numel(spikeTimes) == 0
+                intArray(1) = NaN;
+            else
+                for spike = spikeTimes
+                    data = []; 
+                    start = spike - handles.before; 
+                    if start < 1
+                       continue; 
+                    end
+                    final = spike + handles.after; 
+                    if final > numel(spikeDataArray{i}.dffTrace)
+                        continue; 
+                    end
+                    for int = (start : 1 : final) 
+                        data = [data spikeDataArray{i}.dffTrace(int)]; 
+                    end
+                    intArray = cat(1, intArray, data); 
                 end
-                final = spike + handles.after; 
-                if final > numel(spikeDataArray{i}.dffTrace)
-                    continue; 
-                end
-                for int = (start : 1 : final) 
-                    data = [data spikeDataArray{i}.dffTrace(int)]; 
-                end
-                intArray = cat(1, intArray, data); 
             end
-            intCell{i} = intArray;
+            box = {};
+            box{1} = assignments{i};
+            box{2} = intArray;
+            intCell{i} = box;
             length = handles.after + handles.before + 1;
             interval = intCell;
-            if numel(intCell{i}) > 1
+           
+            if numel(intCell{i}{2}) > 0
                 avg = [];
-                for k = 1:length
-                    value = mean(intCell{i}(:,k));
-                    avg = [avg value];
-                    
+                if isnan(intCell{i}{2})
+                    for k = 1:length
+                        avg = [avg NaN];
+                    end
+                else
+                    for k = 1:length
+                        value = mean(intCell{i}{2}(:,k));
+                        avg = [avg value];
+                    end
                 end
-                meanCell{i} = avg;
+                avg = cat(2, rois(i), avg);
+                meanCell = cat(1, meanCell, avg); 
             end
-            means = meanCell;
+            means = sortrows(meanCell);
         end
     end
 
