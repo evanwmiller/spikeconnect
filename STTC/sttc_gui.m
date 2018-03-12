@@ -271,7 +271,8 @@ function plotdetails(handles, roi1, roi2)
 [~,~,ext] = fileparts(handles.selection);
 fileGroup = getfilegroup(handles);
 if isempty(ext) %selected group
-    plotxcorr(fileGroup,roi1,roi2,handles.xcorrMaxLagMs);
+    toPlot = true;
+    calcxcorr(fileGroup,roi1,roi2,handles.xcorrMaxLagMs, toPlot);
     plotxcorrtotal(fileGroup, handles.xcorrMaxLagMs);
 else
     plotspikes(fileGroup{1},roi1,roi2);

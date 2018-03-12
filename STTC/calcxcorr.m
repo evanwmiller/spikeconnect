@@ -1,8 +1,16 @@
-function [xcorrArr, lagArrMs] = plotxcorr(fileGroup,roi1,roi2, maxLagMs, toPlot)
+function [xcorrArr, lagArrMs] = calcxcorr(fileGroup,roi1,roi2, maxLagMs, toPlot)
+% CALCXCORR Calculates the crosscorrelation between the binary spike
+% trains of roi1 and roi2 from fileGroup. 
+%
+% The output parallels that of XCORR, where xcorrArr is the value and 
+% lagArrMs is the lag index. fileGroup should be a cell array of 
+% spike-*.mat files for the same cover slip. maxLagMs is the maximum lag
+% this function considers.
 
 if nargin == 4
-    toPlot = true;
+    toPlot = false;
 end
+
 xcorrArr = [];
 for iFile = 1:numel(fileGroup)
     spikeFile = fileGroup{iFile};
