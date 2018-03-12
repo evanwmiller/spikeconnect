@@ -1,15 +1,16 @@
-function varargout = xci_gui(varargin)
-% XCI_GUI GUI used for batch XCI analysis. Use update to view the histogram
-% of xci values and threshold to set minimum xci to be considered a
+function varargout = cm_gui(varargin)
+% CM_GUI GUI used for batch CM analysis. Use update to view the histogram
+% of cm values and threshold to set minimum alpha value to be considered a
 % connection. All cells that have a frequency lower than minFreq are
-% considered nonfiring.
+% considered nonfiring. 
+% See Yin & Yao 2016. https://www.nature.com/articles/srep29192.pdf.
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @xci_gui_OpeningFcn, ...
-                   'gui_OutputFcn',  @xci_gui_OutputFcn, ...
+                   'gui_OpeningFcn', @cm_gui_OpeningFcn, ...
+                   'gui_OutputFcn',  @cm_gui_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -23,11 +24,11 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before xci_gui is made visible.
-function xci_gui_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before cm_gui is made visible.
+function cm_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % OPENINGFCN Sets default values and centers the application window.
 
-% Choose default command line output for xci_gui
+% Choose default command line output for cm_gui
 handles.output = hObject;
 
 movegui(gcf,'center')
@@ -36,7 +37,7 @@ movegui(gcf,'center')
 handles.params.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.params.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
 handles.params.minFreq = str2double(get(handles.minFreqEdit,'String'));
-handles.params.xciThreshold = str2double(get(handles.xciThresholdEdit,'String'));
+handles.params.alphaThreshold = str2double(get(handles.alphaThresholdEdit,'String'));
 handles.params.filter.dgc = 'include';
 handles.params.filter.inhib = 'include';
 handles.params.filter.ca1 = 'include';
@@ -83,15 +84,15 @@ if ~handles.changed
     return;
 end
 
-handles.results = xcianalysis(handles.spikeFileStruct, handles.params);
+handles.results = causalityanalysis(handles.spikeFileStruct, handles.params);
 handles.changed = false;
 
 axes(handles.figAxes);
 
-[dist, edges] = histcounts(handles.results.aggregate.xci, handles.numBins);
+[dist, edges] = histcounts(handles.results.aggregate.cm, handles.numBins);
 centers = (edges(1:end-1) + edges(2:end))/2;
 bar(centers, dist);
-xlabel('XCI');
+xlabel('Causality Metric');
 ylabel('Count');
 
 guidata(hObject, handles);
@@ -113,7 +114,7 @@ if isequal(matDir,0); return; end;
 
 disp('Please wait...');
 matPath = [matDir matName];
-[dist, edges] = histcounts(handles.results.aggregate.xci, handles.numBins);
+[dist, edges] = histcounts(handles.results.aggregate.cm, handles.numBins);
 save(matPath, 'dist', 'edges');
 disp('Save to .mat file complete');
 
@@ -136,11 +137,11 @@ disp('Please wait...');
 excelPath = [excelDir excelName];
 
 if handles.changed
-    handles.results = xcianalysis(handles.spikeFileStruct, handles.params);
+    handles.results = causalityanalysis(handles.spikeFileStruct, handles.params);
     handles.changed = false;
 end
 
-xcitoexcel(handles.results, excelPath);
+causalitytoexcel(handles.results, excelPath);
 
 disp('Excel export completed.');
 guidata(hObject, handles);
@@ -152,8 +153,8 @@ handles.changed = true;
 guidata(hObject,handles);
 
 
-function xciThresholdEdit_Callback(hObject, eventdata, handles)
-handles.params.xciThreshold = str2double(get(hObject,'String'));
+function alphaThresholdEdit_Callback(hObject, eventdata, handles)
+handles.params.alphaThreshold = str2double(get(hObject,'String'));
 handles.changed = true;
 guidata(hObject,handles);
 
@@ -249,7 +250,7 @@ guidata(hObject, handles);
 % ==================== UNUSED GUIDE FUNCTIONS ==================== %
 
 % --- Outputs from this function are returned to the command line.
-function varargout = xci_gui_OutputFcn(hObject, eventdata, handles) 
+function varargout = cm_gui_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -273,8 +274,8 @@ end
 
 
 % --- Executes during object creation, after setting all properties.
-function xciThresholdEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to xciThresholdEdit (see GCBO)
+function alphaThresholdEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to alphaThresholdEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
