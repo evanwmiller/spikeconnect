@@ -1,4 +1,6 @@
-% INTERVAL CALC 
+function varargout = intervalcalc(varargin)
+% intervalcalc MATLAB code for intervalcalc.fig
+%
 % Calculates average dff values over set intervals near spikes
 % Input: Before (int), After (int), Directory for
 % analysis
@@ -13,34 +15,6 @@
 % 3 = CA1
 % 4 = CA3
 % 5 = Unknown
-
-
-
-function varargout = intervalcalc(varargin)
-% intervalcalc MATLAB code for intervalcalc.fig
-%      intervalcalc, by itself, creates a new intervalcalc or raises the existing
-%      singleton*.
-%
-%      H = intervalcalc returns the handle to a new intervalcalc or the handle to
-%      the existing singleton*.
-%
-%      intervalcalc('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in intervalcalc.M with the given input arguments.
-%
-%      intervalcalc('Property','Value',...) creates a new intervalcalc or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before intervalcalc_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to intervalcalc_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help intervalcalc
-
-% Last Modified by GUIDE v2.5 20-Feb-2018 00:41:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -102,93 +76,70 @@ function browsebutton_Callback(hObject, eventdata, handles)
 baseDir = uigetdir('', 'Select a folder');
 if baseDir == 0; return; end;
 handles.baseDir = baseDir;
-set(handles.folderText , 'String' , handles.baseDir)
-spikeFilePaths = recursdir(handles.baseDir , '^spikes-.*.mat$');
-if isempty(spikeFilePaths)
+set(handles.folderText , 'String' , baseDir)
+handles.spikeFilePaths = recursdir(baseDir , '^spikes-.*.mat$');
+handles.roiFilePaths = recursdir(baseDir , '^roi-.*.mat$'); 
+if isempty(handles.spikeFilePaths)
     errordlg('No files found.');
     return;
 end
-handles.spikeFilePaths = spikeFilePaths; %spikes-*.mat files
-handles.roiFilePaths = recursdir(baseDir , '^roi-.*.mat$'); 
 guidata(hObject, handles);
 
 
-
-
 function [interval, means] = calculatetimes(handles) 
-    rois = [];
-    for iRoiFile = 1:numel(handles.roiFilePaths) 
-        load(handles.roiFilePaths{iRoiFile} , 'assignments');
-        for i = 1:numel(assignments)
-            if strcmp(assignments{i}, 'DGC')
-                rois(i) = 1;
-            end
-            if strcmp(assignments{i}, 'Inhib')
-                rois(i) = 2;
-            end
-            if strcmp(assignments{i}, 'CA1')
-                rois(i) = 3;
-            end
-            if strcmp(assignments{i}, 'CA3')
-                rois(i) = 4;
-            end
-            if strcmp(assignments{i}, 'Unknown')
-                rois(i) = 5;
+rois = [];
+load(handles.roiFilePaths{1}, 'assignments');
+for i = 1:numel(assignments)
+    rois(i) = getvalueofassignment(assignments{i});
+end
+
+interval = [];
+for iSpikeFile = 1:numel(handles.spikeFilePaths) 
+    load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray');
+    intCell = {};
+    meanCell = [];
+    for i = 1:numel(spikeDataArray)
+        intArray = [];
+        spikeTimes = spikeDataArray{i}.rasterSpikeTimes; 
+        if numel(spikeTimes) == 0
+            intArray(1) = NaN;
+        else
+            for spike = spikeTimes
+                start = spike - handles.before;
+                final = spike + handles.after;
+                if start < 1 || final > numel(spikeDataArray{i}.dffTrace)
+                    continue; 
+                end
+                data = spikeDataArray{i}.dffTrace(start:final); 
+                intArray = [intArray; data]; 
             end
         end
-    end
-    interval = [];
-    for iSpikeFile = 1:numel(handles.spikeFilePaths) 
-        load(handles.spikeFilePaths{iSpikeFile} , 'spikeDataArray'); 
-        intCell = {};
-        meanCell = [];
-        for i = 1:numel(spikeDataArray)
-            intArray = [];
-            spikeTimes = spikeDataArray{i}.rasterSpikeTimes; 
-            if numel(spikeTimes) == 0
-                intArray(1) = NaN;
+
+        box = {};
+        box{1} = assignments{i};
+        box{2} = intArray;
+        intCell{i} = box;
+        length = handles.after + handles.before + 1;
+        interval = intCell;
+
+        if numel(intCell{i}{2}) > 0
+            avg = [];
+            if isnan(intCell{i}{2})
+                for k = 1:length
+                    avg = [avg NaN];
+                end
             else
-                for spike = spikeTimes
-                    data = []; 
-                    start = spike - handles.before; 
-                    if start < 1
-                       continue; 
-                    end
-                    final = spike + handles.after; 
-                    if final > numel(spikeDataArray{i}.dffTrace)
-                        continue; 
-                    end
-                    for int = (start : 1 : final) 
-                        data = [data spikeDataArray{i}.dffTrace(int)]; 
-                    end
-                    intArray = cat(1, intArray, data); 
+                for k = 1:length
+                    value = mean(intCell{i}{2}(:,k));
+                    avg = [avg value];
                 end
             end
-            box = {};
-            box{1} = assignments{i};
-            box{2} = intArray;
-            intCell{i} = box;
-            length = handles.after + handles.before + 1;
-            interval = intCell;
-           
-            if numel(intCell{i}{2}) > 0
-                avg = [];
-                if isnan(intCell{i}{2})
-                    for k = 1:length
-                        avg = [avg NaN];
-                    end
-                else
-                    for k = 1:length
-                        value = mean(intCell{i}{2}(:,k));
-                        avg = [avg value];
-                    end
-                end
-                avg = cat(2, rois(i), avg);
-                meanCell = cat(1, meanCell, avg); 
-            end
-            means = sortrows(meanCell);
+            avg = cat(2, rois(i), avg);
+            meanCell = cat(1, meanCell, avg); 
         end
+        means = sortrows(meanCell);
     end
+end
 
 
 
