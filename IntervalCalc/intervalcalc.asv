@@ -86,7 +86,7 @@ end
 guidata(hObject, handles);
 
 
-function [interval, totalMeans] = calculatetimes(handles) 
+function [interval, totalmeans] = calculatetimes(handles) 
 rois = [];
 load(handles.roiFilePaths{1}, 'assignments');
 for i = 1:numel(assignments)
@@ -94,8 +94,7 @@ for i = 1:numel(assignments)
 end
 
 interval = [];
-totalMeans = [];
-index = 0;
+totalmeans = [];
 for iSpikeFile = 1:numel(handles.spikeFilePaths) 
     load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray');
     intCell = {};
@@ -122,7 +121,7 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
         box{2} = intArray;
         intCell{i} = box;
         length = handles.after + handles.before + 1;
-        
+        interval = [interval intCell];
 
         if numel(intCell{i}{2}) > 0
             avg = [];
@@ -137,13 +136,13 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
                 end
             end
             avg = cat(2, rois(i), avg);
-            meanCell = [meanCell; avg]; 
+            meanCell = cat(1, meanCell, avg); 
         end
-        
+        means = sortrows(meanCell);
+        totalmeans{i} = [totalmeans means];
     end
-    interval = [interval intCell];
-    totalMeans = [totalMeans; meanCell];
-    totalMeans = sortrows(totalMeans);
+    
+    
 end
 
 
