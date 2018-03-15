@@ -15,6 +15,7 @@ function varargout = intervalcalc(varargin)
 % 3 = CA1
 % 4 = CA3
 % 5 = Unknown
+% 6 = No assignment
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -88,10 +89,16 @@ guidata(hObject, handles);
 
 function [interval, totalMeans] = calculatetimes(handles) 
 rois = [];
-load(handles.roiFilePaths{1}, 'assignments');
-for i = 1:numel(assignments)
-    rois(i) = getvalueofassignment(assignments{i});
+noAssignments = false;
+if isempty(handles.roiFilePaths)
+    noAssignments = true;
+else
+    load(handles.roiFilePaths{1}, 'assignments');
+    for i = 1:numel(assignments)
+        rois(i) = getvalueofassignment(assignments{i});
+    end
 end
+
 
 interval = [];
 totalMeans = [];
@@ -118,7 +125,11 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
         end
 
         box = {};
-        box{1} = assignments{i};
+        if noAssignments == true
+            box{1} = 'No assignment';
+        else
+            box{1} = assignments{i};
+        end
         box{2} = intArray;
         intCell{i} = box;
         length = handles.after + handles.before + 1;
@@ -136,14 +147,20 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
                     avg = [avg value];
                 end
             end
-            avg = cat(2, rois(i), avg);
+            if noAssignments == true
+                avg = cat(2, 0, avg);
+            else
+                avg = cat(2, rois(i), avg);
+            end
             meanCell = [meanCell; avg]; 
         end
         
     end
     interval = [interval intCell];
     totalMeans = [totalMeans; meanCell];
-    totalMeans = sortrows(totalMeans);
+    if noAssignments == false
+        totalMeans = sortrows(totalMeans);
+    end
 end
 
 
