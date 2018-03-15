@@ -84,7 +84,7 @@ if ~handles.changed
     return;
 end
 
-handles.results = causalityanalysis(handles.spikeFileStruct, handles.params);
+handles.results = groupcausality(handles.spikeFileStruct, handles.params);
 handles.changed = false;
 
 axes(handles.figAxes);
@@ -137,7 +137,7 @@ disp('Please wait...');
 excelPath = [excelDir excelName];
 
 if handles.changed
-    handles.results = causalityanalysis(handles.spikeFileStruct, handles.params);
+    handles.results = groupcausality(handles.spikeFileStruct, handles.params);
     handles.changed = false;
 end
 
