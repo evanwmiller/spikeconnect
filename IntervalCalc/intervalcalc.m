@@ -94,8 +94,12 @@ if isempty(handles.roiFilePaths)
     noAssignments = true;
 else
     load(handles.roiFilePaths{1}, 'assignments');
-    for i = 1:numel(assignments)
-        rois(i) = getvalueofassignment(assignments{i});
+    if isempty(assignments)
+        noAssignments = true;
+    else
+        for i = 1:numel(assignments)
+            rois(i) = getvalueofassignment(assignments{i});
+        end
     end
 end
 
