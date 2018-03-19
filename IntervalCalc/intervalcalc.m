@@ -93,6 +93,7 @@ noAssignments = false;
 if isempty(handles.roiFilePaths)
     noAssignments = true;
 else
+    assignments = {};
     load(handles.roiFilePaths{1}, 'assignments');
     if isempty(assignments)
         noAssignments = true;
