@@ -41,7 +41,7 @@ disp('CM analysis completed.');
 
 function match = matchesFilter(islandResults, filter)
 % MATCHESFILTER Returns whether or not the island has the required cell
-% types. See XCIANALYSIS for what fields filter should have.
+% types. See CAUSALITYANALYSIS for what fields filter should have.
 typeCount = islandResults.typeCount;
 filterArr = nan(1, 5);
 
@@ -60,8 +60,8 @@ match = all(typeCount(filterArr == 1) > 0) ...
     
 
 function islandResults = islandanalysis(fileGroup, params)
-% ISLANDANALYSIS Returns xci results for the island represented by
-% fileGroup. See XCIANALYSIS.
+% ISLANDANALYSIS Returns cm results for the island represented by
+% fileGroup. See CAUSALITYANALYSIS.
 dir = fileparts(fileGroup{1});
 roiFile = currentdir(dir, '^roi-.*.mat$');
 load([dir filesep roiFile{1}],'assignments');
@@ -72,7 +72,7 @@ end
 cmArr = causalityanalysis(fileGroup, params); 
 
 % count edges from each ROI to each type.
-% there is an edge if |xci| >= xciThreshold
+% there is an edge if |cm| >= cmThreshold
 edgeCount = zeros(5, numel(assignments));
 for row = 1 : size(cmArr, 1)
     for col = row+1 : size(cmArr, 2)
@@ -121,8 +121,8 @@ for col = 1 : 5
     connectivityFactor(:, col) = sumNormalizedEdgeCountByType(:, col) ./ typeCount(col);
 end
 
-% group  xciArr by trigger and receiving cell type.
-% xciArr (as is) is (trigger, receiving). If negative, the connection goes 
+% group  cmArr by trigger and receiving cell type.
+% cmArr (as is) is (trigger, receiving). If negative, the connection goes 
 % the opposite direction.
 cmArrGroupedByType = cell(5, 5);
 for row = 1:size(cmArr,1)

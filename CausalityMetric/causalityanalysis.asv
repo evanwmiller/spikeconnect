@@ -25,11 +25,10 @@ end
 
 function [cmCorr, lagArrMs, seconds] = calccmcorr(fileGroup, roi1, roi2, params)
 maxLagMs = params.monoMaxLagMs;
-totals = 0;
+cmCorrArr = 0;
 totalFrames = 0;
 cmCorr = [];
-totalLagArr = [];
-lag = [];
+lagArrArr = [];
 for iFile = 1:numel(fileGroup)
     spikeFile = fileGroup{iFile};
     load(spikeFile, 'spikeDataArray', 'frameRate');
@@ -41,24 +40,21 @@ for iFile = 1:numel(fileGroup)
     spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
     
     [currcmcorrArrB, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
-    totalLagArr = [totalLagArr lagArr];
-    totals = [totals currcmcorrArrB];
+    lagArrArr = [lagArrArr lagArr];
+    cmCorrArr = addarr(cmCorrArr, currcmcorrArrB);
 end
+xcorrArr = addarr(xcorrArr,currXcorrArr);
 
-for elem = 1:numel(totals)
-    poissResults = poisscdf(totals(elem), 0); %need to change second paramter
+for elem = 1:numel(cmCorrArr)
+    poissResults = poisscdf(cmCorrArr(elem), 0);
     if poissResults > 1 - params.alphaThreshold
         cmCorr = [cmCorr poissResults];
-        if elem <= numel(totalLagArr)
-            lag = [lag totalLagArr(elem)];
-        end
     end
 
 end
-    
-
+display(cmCorr);
 %convert from frames back to Ms
-lagArrMs = lag ./ frameRate .* 1000;
+lagArrMs = lagArrArr ./ frameRate .* 1000;
 seconds = totalFrames / frameRate;
 
 
@@ -67,8 +63,6 @@ minLag = params.monoMinLagMs;
 maxLag = params.monoMaxLagMs;
 counts.atob = sum(cmcorrArr(find(lagArrMs >= -maxLag & lagArrMs <= -minLag)));
 counts.btoa = sum(cmcorrArr(find(lagArrMs >= minLag & lagArrMs <= maxLag)));
-
-        
 
 
 
