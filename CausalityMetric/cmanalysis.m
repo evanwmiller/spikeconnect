@@ -1,4 +1,4 @@
-function results = groupcausality(spikeFileStruct, params)
+function results = cmanalysis(spikeFileStruct, params)
 
 %   -----------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ if ~exist('assignments', 'var')
     error('Assignments are missing for %s', dir);
 end
 
-cmArr = causalityanalysis(fileGroup, params); 
+cmArr = calccmarr(fileGroup, params); 
 
 % count edges from each ROI to each type.
 % there is an edge if |cm| >= cmThreshold

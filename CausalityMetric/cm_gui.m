@@ -36,6 +36,7 @@ movegui(gcf,'center')
 %DEFAULT VALUES FOR PARAMETERS
 handles.params.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.params.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
+handles.params.monoZeroLagMs = str2double(get(handles.k0Lag,'String'));
 handles.params.minFreq = str2double(get(handles.minFreqEdit,'String'));
 handles.params.alphaThreshold = str2double(get(handles.alphaThresholdEdit,'String'));
 handles.params.filter.dgc = 'include';
@@ -84,7 +85,7 @@ if ~handles.changed
     return;
 end
 
-handles.results = groupcausality(handles.spikeFileStruct, handles.params);
+handles.results = cmanalysis(handles.spikeFileStruct, handles.params);
 handles.changed = false;
 
 axes(handles.figAxes);
@@ -137,7 +138,7 @@ disp('Please wait...');
 excelPath = [excelDir excelName];
 
 if handles.changed
-    handles.results = groupcausality(handles.spikeFileStruct, handles.params);
+    handles.results = cmanalysis(handles.spikeFileStruct, handles.params);
     handles.changed = false;
 end
 
@@ -161,6 +162,11 @@ guidata(hObject,handles);
 
 function monoMinLagEdit_Callback(hObject, eventdata, handles)
 handles.params.monoMinLagMs = str2double(get(hObject,'String'));
+handles.changed = true;
+guidata(hObject, handles);
+
+function k0Lag_Callback(hObject, eventdata, handles)
+handles.params.monoZeroLagMs = str2double(get(hObject,'String'));
 handles.changed = true;
 guidata(hObject, handles);
 
@@ -315,6 +321,29 @@ end
 % --- Executes during object creation, afte r setting all properties.
 function numBinsEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to numBinsEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+%function k0Lag_Callback(hObject, eventdata, handles)
+% hObject    handle to k0Lag (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of k0Lag as text
+%        str2double(get(hObject,'String')) returns contents of k0Lag as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function k0Lag_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to k0Lag (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

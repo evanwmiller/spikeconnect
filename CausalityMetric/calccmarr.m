@@ -1,16 +1,27 @@
-function cmArr = causalityanalysis(fileGroup, params)
+function cmArr = calccmarr(fileGroup, params)
 %CALCXCIARR Calculates the causality metrics for the
 %island represented by fileGroup. 
 %
 
 spikeCountArr = countspikes(fileGroup);
 nRoi = numel(spikeCountArr);
-
+cmCorr = [];
+lag = [];
 cmArr = nan(nRoi);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
-        [cmCorrArr, lagArrMs, seconds] = calccmcorr(fileGroup, roi1, roi2, params);
-        counts = bucket(cmCorrArr, lagArrMs, params);
+        [cmCorrArr, lagArrMs, seconds, K0] = calccmcorr(fileGroup, roi1, roi2, params);
+        K0 = mean(K0);
+        for elem = 1:numel(cmCorrArr)
+            poissResults = poisscdf(cmCorrArr(elem), K0); %need to change second paramter
+            if poissResults > 1 - params.alphaThreshold
+                cmCorr = [cmCorr poissResults];
+                if elem <= numel(lagArrMs)
+                    lag = [lag lagArrMs(elem)];
+                end
+            end
+        end
+        counts = bucket(cmCorr, lag, params);
         if spikeCountArr(roi1)/seconds < params.minFreq ...
                 || spikeCountArr(roi2)/seconds < params.minFreq
             cmArr(roi1, roi2) = nan;
@@ -23,38 +34,33 @@ for roi1 = 1:nRoi
 end
 
 
-function [cmCorr, lagArrMs, seconds] = calccmcorr(fileGroup, roi1, roi2, params)
+function [totals, lagArrMs, seconds, totals0] = calccmcorr(fileGroup, roi1, roi2, params)
 maxLagMs = params.monoMaxLagMs;
-cmCorrArr = 0;
+zeroLagMs = params.monoZeroLagMs;
+totals = 0;
+totals0 = 0;
 totalFrames = 0;
-cmCorr = [];
-lagArrArr = [];
+totalLagArr = [];
 for iFile = 1:numel(fileGroup)
     spikeFile = fileGroup{iFile};
     load(spikeFile, 'spikeDataArray', 'frameRate');
     nFrame = numel(spikeDataArray{1}.dffs);
     totalFrames = (totalFrames + nFrame) * numel(fileGroup);
     cmCorrMaxLagFrame = round(maxLagMs*frameRate/1000);
+    cmCorr0LagFrame = round(zeroLagMs*frameRate/1000);
 
     spikeVec1 = times2vector(spikeDataArray{roi1}.rasterSpikeTimes, nFrame);
     spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
     
     [currcmcorrArrB, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
-    lagArrArr = [lagArrArr lagArr];
-    cmCorrArr = addarr(cmCorrArr, currcmcorrArrB);
+    [K0Arr, lagArr0] = xcorr(spikeVec1, spikeVec2, cmCorr0LagFrame);
+    totalLagArr = [totalLagArr lagArr];
+    totals = [totals currcmcorrArrB];
+    totals0 = [totals0 K0Arr];
 end
-xcorrArr = addarr(xcorrArr,currXcorrArr);
 
-for elem = 1:numel(cmCorrArr)
-    poissResults = poisscdf(cmCorrArr(elem), 0);
-    if poissResults > 1 - params.alphaThreshold
-        cmCorr = [cmCorr poissResults];
-    end
-
-end
-display(cmCorr);
 %convert from frames back to Ms
-lagArrMs = lagArrArr ./ frameRate .* 1000;
+lagArrMs = totalLagArr ./ frameRate .* 1000;
 seconds = totalFrames / frameRate;
 
 
@@ -63,6 +69,8 @@ minLag = params.monoMinLagMs;
 maxLag = params.monoMaxLagMs;
 counts.atob = sum(cmcorrArr(find(lagArrMs >= -maxLag & lagArrMs <= -minLag)));
 counts.btoa = sum(cmcorrArr(find(lagArrMs >= minLag & lagArrMs <= maxLag)));
+
+        
 
 
 
