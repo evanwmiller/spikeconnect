@@ -110,21 +110,28 @@ totalMeans = [];
 index = 0;
 for iSpikeFile = 1:numel(handles.spikeFilePaths) 
     load(handles.spikeFilePaths{iSpikeFile}, 'spikeDataArray');
+    load(handles.spikeFilePaths{iSpikeFile}, 'bkgSubtractedTraces');
     intCell = {};
     meanCell = [];
     for i = 1:numel(spikeDataArray)
         intArray = [];
         spikeTimes = spikeDataArray{i}.rasterSpikeTimes; 
+        if isfield(spikeDataArray{i}, 'dffTrace')
+            dffDir = spikeDataArray{i}.dffTrace;
+        else
+            dffDir = calcDffTrace(bkgSubtractedTraces);
+            dffDir = dffDir{i};
+        end
         if numel(spikeTimes) == 0
             intArray(1) = NaN;
         else
             for spike = spikeTimes
                 start = spike - handles.before;
                 final = spike + handles.after;
-                if start < 1 || final > numel(spikeDataArray{i}.dffTrace)
+                if start < 1 || final > numel(dffDir)
                     continue; 
                 end
-                data = spikeDataArray{i}.dffTrace(start:final); 
+                data = dffDir(start:final); 
                 intArray = [intArray; data]; 
             end
         end
@@ -168,8 +175,6 @@ for iSpikeFile = 1:numel(handles.spikeFilePaths)
     end
 end
 
-
-
 % --- Executes during object creation, after setting all properties.
 function before_box_Callback(hObject, eventdata, handles)
 % hObject    handle to before_box (see GCBO)
@@ -210,3 +215,12 @@ handles.after = str2double(get(handles.after_box , 'String'));
 
 saveDir = [handles.baseDir '\meantrace.mat']; 
 save(saveDir, 'intervalTrace', 'meanTrace'); 
+
+
+% --- Executes on button press in radiobutton1.
+function radiobutton1_Callback(hObject, eventdata, handles)
+% hObject    handle to radiobutton1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radiobutton1
