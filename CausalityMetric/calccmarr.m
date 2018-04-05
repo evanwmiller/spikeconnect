@@ -1,46 +1,34 @@
 function cmArr = calccmarr(fileGroup, params)
-%CALCXCIARR Calculates the causality metrics for the
+%CALCCMARR Calculates the causality metrics for the
 %island represented by fileGroup. 
-%
+%  Returns an n x n matrix of ones and zeros where ones
+%  denote positive causality between the two spikes.
 
-spikeCountArr = countspikes(fileGroup);
-nRoi = numel(spikeCountArr);
-cmCorr = [];
-lag = [];
+spikeCountArr = countspikes(fileGroup); 
+nRoi = numel(spikeCountArr); 
 cmArr = nan(nRoi);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
-        [cmCorrArr, lagArrMs, seconds, K0] = calccmcorr(fileGroup, roi1, roi2, params);
-        K0 = mean(K0);
-        for elem = 1:numel(cmCorrArr)
-            poissResults = poisscdf(cmCorrArr(elem), K0); %need to change second paramter
-            if poissResults > 1 - params.alphaThreshold
-                cmCorr = [cmCorr poissResults];
-                if elem <= numel(lagArrMs)
-                    lag = [lag lagArrMs(elem)];
-                end
-            end
-        end
-        counts = bucket(cmCorr, lag, params);
-        if spikeCountArr(roi1)/seconds < params.minFreq ...
-                || spikeCountArr(roi2)/seconds < params.minFreq
-            cmArr(roi1, roi2) = nan;
-        elseif counts.atob >= counts.btoa
-            cmArr(roi1, roi2) = counts.atob/spikeCountArr(roi1);
+        [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params);
+        kt = sum(ktArr);
+        k0 = sum(k0Arr);
+        poissResults = poisscdf(kt, k0);
+        if poissResults > 1 - params.alphaThreshold
+            cmArr(roi1,roi2) = 1;
         else
-            cmArr(roi1, roi2) = -counts.btoa/spikeCountArr(roi2);  
+            cmArr(roi1,roi2) = 0;
         end
     end
 end
 
 
-function [totals, lagArrMs, seconds, totals0] = calccmcorr(fileGroup, roi1, roi2, params)
+function [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params)
 maxLagMs = params.monoMaxLagMs;
+minLagMs = params.monoMinLagMs;
 zeroLagMs = params.monoZeroLagMs;
-totals = 0;
-totals0 = 0;
+ktArr = 0;
+k0Arr = 0;
 totalFrames = 0;
-totalLagArr = [];
 for iFile = 1:numel(fileGroup)
     spikeFile = fileGroup{iFile};
     load(spikeFile, 'spikeDataArray', 'frameRate');
@@ -48,39 +36,20 @@ for iFile = 1:numel(fileGroup)
     totalFrames = (totalFrames + nFrame) * numel(fileGroup);
     cmCorrMaxLagFrame = round(maxLagMs*frameRate/1000);
     cmCorr0LagFrame = round(zeroLagMs*frameRate/1000);
+    cmCorrMinLagFrame = round(minLagMs*frameRate/1000);
 
     spikeVec1 = times2vector(spikeDataArray{roi1}.rasterSpikeTimes, nFrame);
     spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
     
-    [currcmcorrArrB, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
-    [K0Arr, lagArr0] = xcorr(spikeVec1, spikeVec2, cmCorr0LagFrame);
-    totalLagArr = [totalLagArr lagArr];
-    totals = [totals currcmcorrArrB];
-    totals0 = [totals0 K0Arr];
+    [xcorrKt, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
+    for x = 1:numel(xcorrKt)
+        if lagArr(x) >= cmCorrMinLagFrame
+            ktArr = ktArr + xcorrKt(x);
+        end
+    end
+    xcorrK0 = xcorr(spikeVec1, spikeVec2, cmCorr0LagFrame);
+    k0Arr = k0Arr + xcorrK0;
 end
-
-%convert from frames back to Ms
-lagArrMs = totalLagArr ./ frameRate .* 1000;
-seconds = totalFrames / frameRate;
-
-
-function counts = bucket(cmcorrArr, lagArrMs, params)
-minLag = params.monoMinLagMs;
-maxLag = params.monoMaxLagMs;
-counts.atob = sum(cmcorrArr(find(lagArrMs >= -maxLag & lagArrMs <= -minLag)));
-counts.btoa = sum(cmcorrArr(find(lagArrMs >= minLag & lagArrMs <= maxLag)));
-
-        
-
-
-
-function sumArr = addarr(arr1,arr2)
-if isempty(arr1)
-    sumArr = arr2;
-else
-    sumArr = arr1+arr2;
-end
-
 
 function spikeVector = times2vector(spikeTimes, nFrame)
 spikeVector = zeros(1,nFrame);
