@@ -20,6 +20,7 @@ for roi1 = 1:nRoi
         end
     end
 end
+disp(cmArr);
 
 
 function [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params)
@@ -43,7 +44,7 @@ for iFile = 1:numel(fileGroup)
     
     [xcorrKt, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
     for x = 1:numel(xcorrKt)
-        if lagArr(x) >= cmCorrMinLagFrame
+        if lagArr(x) >= cmCorrMinLagFrame || lagArr(x) <= -cmCorrMinLagFrame
             ktArr = ktArr + xcorrKt(x);
         end
     end
