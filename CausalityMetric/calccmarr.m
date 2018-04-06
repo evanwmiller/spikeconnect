@@ -10,8 +10,8 @@ cmArr = nan(nRoi);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
         [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params);
-        kt = sum(ktArr);
-        k0 = sum(k0Arr);
+        kt = ktArr;
+        k0 = k0Arr;
         poissResults = poisscdf(kt, k0);
         if poissResults > 1 - params.alphaThreshold
             cmArr(roi1,roi2) = 1;
@@ -20,7 +20,6 @@ for roi1 = 1:nRoi
         end
     end
 end
-disp(cmArr);
 
 
 function [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params)
@@ -43,13 +42,14 @@ for iFile = 1:numel(fileGroup)
     spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
     
     [xcorrKt, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
+    
     for x = 1:numel(xcorrKt)
         if lagArr(x) >= cmCorrMinLagFrame || lagArr(x) <= -cmCorrMinLagFrame
             ktArr = ktArr + xcorrKt(x);
         end
     end
     xcorrK0 = xcorr(spikeVec1, spikeVec2, cmCorr0LagFrame);
-    k0Arr = k0Arr + xcorrK0;
+    k0Arr = k0Arr + sum(xcorrK0);
 end
 
 function spikeVector = times2vector(spikeTimes, nFrame)
