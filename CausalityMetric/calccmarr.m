@@ -9,9 +9,7 @@ nRoi = numel(spikeCountArr);
 cmArr = nan(nRoi);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
-        [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params);
-        kt = ktArr;
-        k0 = k0Arr;
+        [kt, k0] = calccmcorr(fileGroup, roi1, roi2, params);
         poissResults = poisscdf(kt, k0);
         if poissResults > 1 - params.alphaThreshold
             cmArr(roi1,roi2) = 1;

@@ -36,7 +36,7 @@ movegui(gcf,'center')
 %DEFAULT VALUES FOR PARAMETERS
 handles.params.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.params.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
-handles.params.monoZeroLagMs = str2double(get(handles.k0Lag,'String'));
+handles.params.monoZeroLagMs = str2double(get(handles.monoMaxLagEdit,'String')) - str2double(get(handles.monoMinLagEdit,'String'));
 handles.params.minFreq = str2double(get(handles.minFreqEdit,'String'));
 handles.params.alphaThreshold = str2double(get(handles.alphaThresholdEdit,'String'));
 handles.params.filter.dgc = 'include';
@@ -142,7 +142,7 @@ if handles.changed
     handles.changed = false;
 end
 
-causalitytoexcel(handles.results, excelPath);
+cmtoexcel(handles.results, excelPath);
 
 disp('Excel export completed.');
 guidata(hObject, handles);
@@ -162,17 +162,13 @@ guidata(hObject,handles);
 
 function monoMinLagEdit_Callback(hObject, eventdata, handles)
 handles.params.monoMinLagMs = str2double(get(hObject,'String'));
+handles.params.monoZeroLagMs = handles.params.monoMaxLagMs - str2double(get(hObject,'String'));
 handles.changed = true;
 guidata(hObject, handles);
-
-function k0Lag_Callback(hObject, eventdata, handles)
-handles.params.monoZeroLagMs = str2double(get(hObject,'String'));
-handles.changed = true;
-guidata(hObject, handles);
-
 
 function monoMaxLagEdit_Callback(hObject, eventdata, handles)
 handles.params.monoMaxLagMs = str2double(get(hObject,'String'));
+handles.params.monoZeroLagMs = str2double(get(hObject,'String')) - handles.params.monoMinLagMs;
 handles.changed = true;
 guidata(hObject, handles);
 
