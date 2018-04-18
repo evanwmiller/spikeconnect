@@ -9,8 +9,11 @@ nRoi = numel(spikeCountArr);
 cmArr = nan(nRoi);
 for roi1 = 1:nRoi
     for roi2 = (roi1+1):nRoi
-        [kt, k0] = calccmcorr(fileGroup, roi1, roi2, params);
+        [kt, k0] = calccm(fileGroup, roi1, roi2, params);
         poissResults = poisscdf(kt, k0);
+        if k0 == 0
+            warning("K0 is zero so the poisson cdf will always return 1");
+        end
         if poissResults > 1 - params.alphaThreshold
             cmArr(roi1,roi2) = 1;
         else
@@ -19,35 +22,36 @@ for roi1 = 1:nRoi
     end
 end
 
-
-function [ktArr, k0Arr] = calccmcorr(fileGroup, roi1, roi2, params)
+%Calculates the cross correlation values of kt and k0 for two rois
+function [kt, k0] = calccm(fileGroup, roi1, roi2, params)
 maxLagMs = params.monoMaxLagMs;
 minLagMs = params.monoMinLagMs;
 zeroLagMs = params.monoZeroLagMs;
-ktArr = 0;
-k0Arr = 0;
+
+kt = 0;
+k0 = 0;
 totalFrames = 0;
 for iFile = 1:numel(fileGroup)
     spikeFile = fileGroup{iFile};
     load(spikeFile, 'spikeDataArray', 'frameRate');
     nFrame = numel(spikeDataArray{1}.dffs);
     totalFrames = (totalFrames + nFrame) * numel(fileGroup);
-    cmCorrMaxLagFrame = round(maxLagMs*frameRate/1000);
-    cmCorr0LagFrame = round(zeroLagMs*frameRate/1000);
-    cmCorrMinLagFrame = round(minLagMs*frameRate/1000);
+    maxLagFrame = round(maxLagMs*frameRate/1000);
+    zeroLagFrame = round(zeroLagMs*frameRate/1000);
+    minLagFrame = round(minLagMs*frameRate/1000);
 
     spikeVec1 = times2vector(spikeDataArray{roi1}.rasterSpikeTimes, nFrame);
     spikeVec2 = times2vector(spikeDataArray{roi2}.rasterSpikeTimes, nFrame);
     
-    [xcorrKt, lagArr] = xcorr(spikeVec1, spikeVec2, cmCorrMaxLagFrame);
+    [xcorrKt, lagArr] = xcorr(spikeVec1, spikeVec2, maxLagFrame);
     
     for x = 1:numel(xcorrKt)
-        if lagArr(x) >= cmCorrMinLagFrame || lagArr(x) <= -cmCorrMinLagFrame
-            ktArr = ktArr + xcorrKt(x);
+        if lagArr(x) >= minLagFrame || lagArr(x) <= -minLagFrame
+            kt = kt + xcorrKt(x);
         end
     end
-    xcorrK0 = xcorr(spikeVec1, spikeVec2, cmCorr0LagFrame);
-    k0Arr = k0Arr + sum(xcorrK0);
+    xcorrK0 = xcorr(spikeVec1, spikeVec2, zeroLagFrame);
+    k0 = k0 + sum(xcorrK0);
 end
 
 function spikeVector = times2vector(spikeTimes, nFrame)

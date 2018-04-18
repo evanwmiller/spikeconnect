@@ -36,7 +36,7 @@ movegui(gcf,'center')
 %DEFAULT VALUES FOR PARAMETERS
 handles.params.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
 handles.params.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
-handles.params.monoZeroLagMs = str2double(get(handles.monoMaxLagEdit,'String')) - str2double(get(handles.monoMinLagEdit,'String'));
+handles.params.monoZeroLagMs = (str2double(get(handles.monoMaxLagEdit,'String')) - str2double(get(handles.monoMinLagEdit,'String')))/2;
 handles.params.minFreq = str2double(get(handles.minFreqEdit,'String'));
 handles.params.alphaThreshold = str2double(get(handles.alphaThresholdEdit,'String'));
 handles.params.filter.dgc = 'include';
@@ -162,13 +162,13 @@ guidata(hObject,handles);
 
 function monoMinLagEdit_Callback(hObject, eventdata, handles)
 handles.params.monoMinLagMs = str2double(get(hObject,'String'));
-handles.params.monoZeroLagMs = handles.params.monoMaxLagMs - str2double(get(hObject,'String'));
+handles.params.monoZeroLagMs = (handles.params.monoMaxLagMs - str2double(get(hObject,'String')))/2;
 handles.changed = true;
 guidata(hObject, handles);
 
 function monoMaxLagEdit_Callback(hObject, eventdata, handles)
 handles.params.monoMaxLagMs = str2double(get(hObject,'String'));
-handles.params.monoZeroLagMs = str2double(get(hObject,'String')) - handles.params.monoMinLagMs;
+handles.params.monoZeroLagMs = (str2double(get(hObject,'String')) - handles.params.monoMinLagMs)/2;
 handles.changed = true;
 guidata(hObject, handles);
 

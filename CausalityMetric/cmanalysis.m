@@ -1,5 +1,6 @@
 function results = cmanalysis(spikeFileStruct, params)
-
+%Calculates the causality metrics for each of the islands in
+%spikeFileStruct. See cm_gui.
 %   -----------------------------------------------------------------------
 
 disp('CM analysis in progress...');
