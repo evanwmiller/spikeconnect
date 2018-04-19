@@ -1,8 +1,10 @@
 function varargout = cm_gui(varargin)
-% CM_GUI GUI used for batch CM analysis. Use update to view the histogram
+% CM_GUI GUI used for batch CM analysis. Use update to view the display
 % of cm values and threshold to set minimum alpha value to be considered a
 % connection. All cells that have a frequency lower than minFreq are
-% considered nonfiring. 
+% considered nonfiring. K0 lag range set to match Kt threshold.
+% Input: File directory, threshold, min frequency, alpha value
+% Output: Causality metrics
 % See Yin & Yao 2016. https://www.nature.com/articles/srep29192.pdf.
 
 % Begin initialization code - DO NOT EDIT
@@ -58,7 +60,7 @@ function browseButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 baseDir = uigetdir('', 'Select a folder');
-if baseDir == 0; return; end;
+if baseDir == 0; return; end
 handles.baseDir = baseDir;
 
 set(handles.folderText , 'String' , handles.baseDir)

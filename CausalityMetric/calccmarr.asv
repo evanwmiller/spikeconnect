@@ -51,20 +51,15 @@ for iFile = 1:numel(fileGroup)
             kt = kt + xcorrKt(x);
         end
     end
-    
-    [xcorrK0, K0Lags] = xcorr(spikeVec1, spikeVec2, zeroLagFrame);
+    [initXCorrK0, K0Lags] = xcorr(spikeVec1, spikeVec2, zeroLagFrame);
     if mod(minLagMs, 2) == 0
-        for index = 1:numel(xcorrK0)
-            if K0Lags(index) < 1 - zeroLagFrame
-                continue;
-            else
-                k0 = [k0 xcorrK0(index)];
-            end
+        for index = 1:numel(K0Lags)
+            if K0Lags[inde
         end
-        k0 = sum(k0);
     else
-        k0 = sum(xcorrK0);
+        xcorrK0 = initXCorrK0;
     end
+    k0 = k0 + sum(xcorrK0);
 end
 
 function spikeVector = times2vector(spikeTimes, nFrame)
