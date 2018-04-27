@@ -32,8 +32,6 @@ movegui(gcf,'center')
 %DEFAULT VALUES FOR PARAMETERS
 handles.sttcMaxLagMs = str2double(get(handles.sttcMaxLagEdit,'String'));
 handles.xcorrMaxLagMs = str2double(get(handles.xcorrMaxLagEdit,'String'));
-handles.monoMinLagMs = str2double(get(handles.monoMinLagEdit,'String'));
-handles.monoMaxLagMs = str2double(get(handles.monoMaxLagEdit,'String'));
 
 % Update handles structure
 guidata(hObject, handles);
@@ -215,25 +213,6 @@ guidata(hObject,handles);
 %        str2double(get(hObject,'String')) returns contents of xcorrMaxLagEdit as a double
 
 
-function monoMinLagEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to monoMinLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.monoMinLagMs = str2double(get(hObject,'String'));
-guidata(hObject, handles);
-% Hints: get(hObject,'String') returns contents of monoMinLagEdit as text
-%        str2double(get(hObject,'String')) returns contents of monoMinLagEdit as a double
-
-
-function monoMaxLagEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to monoMaxLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.monoMaxLagMs = str2double(get(hObject,'String'));
-guidata(hObject, handles);
-% Hints: get(hObject,'String') returns contents of monoMaxLagEdit as text
-%        str2double(get(hObject,'String')) returns contents of monoMaxLagEdit as a double
-
 % ==================== UTILITY FUNCTIONS ==================== %
 
 function [fileGroup,selection] = getfilegroup(handles)
@@ -347,31 +326,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-% --- Executes during object creation, after setting all properties.
-function monoMinLagEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to monoMinLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function monoMaxLagEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to monoMaxLagEdit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on mouse press over axes background.
 function figAxes_ButtonDownFcn(hObject, eventdata, handles)

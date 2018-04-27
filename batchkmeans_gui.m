@@ -7,7 +7,7 @@ function varargout = batchkmeans_gui(varargin)
 %       2.  Generate traces for each ROI.
 %       3.  Use k-means clustering to identify possible spikes,
 %           subthreshold events, and baselines.
-%       4.  Save preliminary spikesData to spikesData.mat.
+%       4.  Save preliminary spikesData to spikes-*.mat.
 %
 
 % Copyright 2016 The Miller Lab, UC Berkeley
